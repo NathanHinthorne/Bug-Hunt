@@ -1,6 +1,8 @@
-# My Java App
+# Butterfly Game
 
-This is a simple Java application that uses Maven for dependency management and build automation.
+This is a simple multiplayer game where players collect bug cards with various point values. 
+The player with the most points at the end of the game wins.
+
 
 ## Project Structure
 
