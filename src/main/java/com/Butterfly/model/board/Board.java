@@ -5,6 +5,7 @@ import com.Butterfly.model.players.ComputerPlayer;
 import com.Butterfly.model.players.HumanPlayer;
 import com.Butterfly.model.players.Player;
 
+import java.lang.reflect.Array;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
@@ -16,6 +17,7 @@ public class Board {
     private int gridHeight;
     public static final double NET_CHANCE = 0.14;
     public static final Random RANDOM = new Random();
+    private int numHighlightedCards = 0;
     List<Card> drawPile;
 
     private final Hedgehog hedgehog;
@@ -23,18 +25,20 @@ public class Board {
     private final List<Player> players;
     private Player currentPlayer;
     private boolean readyToMove = false;
-    private CompletableFuture<Void> playerMoveFuture;
+    private final List<BoardObserver> observers = new ArrayList<>();
 
-    public Board(int numberOfHumanPlayers, int numberOfComputerPlayers) {
+    public Board(int numberOfHumanPlayers, int numberOfComputerPlayers, ArrayList<String> playerNames) {
 
         players = new ArrayList<>();
 
         for (int i = 0; i < numberOfHumanPlayers; i++) {
             players.add(new HumanPlayer());
+            players.get(i).setName(playerNames.get(i));
         }
 
         for (int i = 0; i < numberOfComputerPlayers; i++) {
             players.add(new ComputerPlayer());
+            players.get(numberOfHumanPlayers + i).setName("Com " + (i + 1));
         }
 
         currentPlayer = players.get(0);
@@ -53,32 +57,6 @@ public class Board {
         int y = 1 + RANDOM.nextInt(gridHeight-2);
         return Hedgehog.create(x, y, GlobalDir.WEST);
     }
-
-//    public Board() {
-//        players = new ArrayList<>();
-//    }
-
-//    public void setNumberOfHumanPlayers(int numberOfHumanPlayers) {
-//        for (int i = 0; i < numberOfHumanPlayers; i++) {
-//            players.add(new HumanPlayer());
-//        }
-//    }
-//
-//    public void setNumberOfComputerPlayers(int numberOfComputerPlayers) {
-//        for (int i = 0; i < numberOfComputerPlayers; i++) {
-//            players.add(new ComputerPlayer());
-//        }
-//    }
-//
-//    public void setup() {
-//        // setup board
-//        grid = createGrid(players.size());
-//        drawPile = createDrawPile();
-//        shuffle();
-//        placeStartingCards();
-//        placeHedgehog();
-//    }
-
 
     private Card[][] createGrid(int numberOfPlayers) {
 
@@ -334,9 +312,10 @@ public class Board {
         return drawPile.size();
     }
 
-    public void highlightCards() { //TODO In GUI, where cards are highlighted on the grid, consider using this method's idea to make a list of EVERY movable spot
+    public void highlightCards() {
 
         unhighlightAllCards();
+        numHighlightedCards = 0;
 
         switch(hedgehog.getDir()) {
             case NORTH:
@@ -389,12 +368,14 @@ public class Board {
             Card card = getCard(x, scanDist);
             if (!card.isEmpty() && !hasHedgehog(x, scanDist)) {
                 card.setHighlighted(true);
+                numHighlightedCards++;
             }
         }
         for (int scanDist = 0; scanDist < gridWidth; scanDist++) {
             Card card = getCard(scanDist, y);
             if (!card.isEmpty() && !hasHedgehog(scanDist, y)) {
                 card.setHighlighted(true);
+                numHighlightedCards++;
             }
         }
     }
@@ -407,12 +388,14 @@ public class Board {
             Card card = getCard(scanDist, y);
             if (!card.isEmpty() && !hasHedgehog(scanDist, y)) {
                 card.setHighlighted(true);
+                numHighlightedCards++;
             }
         }
         for (int scanDist = 0; scanDist < gridHeight; scanDist++) {
             Card card = getCard(x, scanDist);
             if (!card.isEmpty() && !hasHedgehog(x, scanDist)) {
                 card.setHighlighted(true);
+                numHighlightedCards++;
             }
         }
     }
@@ -425,12 +408,14 @@ public class Board {
             Card card = getCard(scanDist, y);
             if (!card.isEmpty() && !hasHedgehog(scanDist, y)) {
                 card.setHighlighted(true);
+                numHighlightedCards++;
             }
         }
         for (int scanDist = 0; scanDist < gridHeight; scanDist++) {
             Card card = getCard(x, scanDist);
             if (!card.isEmpty() && !hasHedgehog(x, scanDist)) {
                 card.setHighlighted(true);
+                numHighlightedCards++;
             }
         }
     }
@@ -443,12 +428,14 @@ public class Board {
             Card card = getCard(x, scanDist);
             if (!card.isEmpty() && !hasHedgehog(x, scanDist)) {
                 card.setHighlighted(true);
+                numHighlightedCards++;
             }
         }
         for (int scanDist = 0; scanDist < gridWidth; scanDist++) {
             Card card = getCard(scanDist, y);
             if (!card.isEmpty() && !hasHedgehog(scanDist, y)) {
                 card.setHighlighted(true);
+                numHighlightedCards++;
             }
         }
     }
@@ -499,20 +486,34 @@ public class Board {
     }
 
 
-    // allows asynchronous player movement
-    public CompletableFuture<Void> letPlayerMove() {
-        readyToMove = true;
-        playerMoveFuture = new CompletableFuture<>();
-        return playerMoveFuture;
+    /**
+     * Registers an observer to be notified when the board state changes
+     * @param observer the observer to register
+     */
+    public void addObserver(BoardObserver observer) {
+        observers.add(observer);
     }
 
-    // Method to signal that the player movement is completed
-    public void playerMoveCompleted() {
-        readyToMove = false;
-        playerMoveFuture.complete(null);
+    /**
+     * Sets the state of the board and notifies observers
+     * @param ready true if the hedgehog is ready to move, false otherwise
+     */
+    public void setReadyToMove(boolean ready) {
+        readyToMove = ready;
+        notifyObservers(ready);
     }
 
-    public boolean isReadyToMove() {
-        return readyToMove;
+    /**
+     * Notifies observers that the board state has changed
+     * @param readyToMove true if the hedgehog is ready to move, false otherwise
+     */
+    private void notifyObservers(boolean readyToMove) {
+        for (BoardObserver observer : observers) {
+            observer.onBoardStateChanged(readyToMove);
+        }
+    }
+
+    public boolean canMove() {
+        return numHighlightedCards == 0;
     }
 }

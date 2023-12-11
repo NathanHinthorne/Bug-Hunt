@@ -19,6 +19,7 @@ import javafx.stage.Stage;
 
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class App extends Application {
@@ -76,24 +77,30 @@ public class App extends Application {
     private void showGameScreen(Stage introStage, IntroScreen introScreen) {
         introStage.close();
 
-        // read game data the user entered
-        int numberOfHumanPlayers = introScreen.getNumberOfHumanPlayers();
-        int numberOfComPlayers = introScreen.getNumberOfComputerPlayers();
-            //TODO read rest of data...
-
-        // now that we have the data, we can create the board
-        board = new Board(numberOfHumanPlayers, numberOfComPlayers);
-
+        readGameData(introScreen);
 
         Stage gameStage = new Stage();
         gameScreen = new GameScreen(gameStage, board, DEBUG_MODE);
+
+        startGame(gameStage);
     }
 
-    private void startGame(Stage primaryStage) { //TODO change all text related methods to GUI ones
+    private void readGameData(IntroScreen introScreen) {
+        // read game data the user entered
+        int numberOfHumanPlayers = introScreen.getNumberOfHumanPlayers();
+        int numberOfComPlayers = introScreen.getNumberOfComputerPlayers();
+        ArrayList<String> playerNames = introScreen.getPlayerNames();
+        //TODO read rest of data...
+
+        // now that we have the data, we can create the board
+        board = new Board(numberOfHumanPlayers, numberOfComPlayers, playerNames);
+    }
+
+    private void startGame(Stage gameStage) { //TODO change all text related methods to GUI ones
         // game structure
 //        textIntro();
-        setup();
-//        gameLoop();
+//        setup();
+        gameLoop();
 //        ending();
     }
 
@@ -171,11 +178,6 @@ public class App extends Application {
             // loop through players' turns
             for (Player player : board.getPlayers()) {
 
-//                if (player.getTotalCards() > 0) {
-//                    player.printTextCollection();
-//                    System.out.println("Total Points: " + player.getScore());
-//                }
-                board.setCurrentPlayer(player);
                 playerTurn(player);
             }
 
@@ -183,17 +185,16 @@ public class App extends Application {
             roundCount++;
 
             // end of loop, check for game over
-            //  - if hedgehog can't move, game over
-//            if (!board.canMove()) {
-//                gameRunning = false;
-//            }
+            if (!board.canMove()) {
+                gameRunning = false;
+            }
         }
     }
 
     private static void playerTurn(Player player)  {
 
-        //TODO!!
-        board.letPlayerMove().join();
+        board.setCurrentPlayer(player);
+        board.setReadyToMove(true);
         audio.playSFX(audio.step1, 0.5);
 
         // collect card
@@ -219,72 +220,72 @@ public class App extends Application {
         // play sfx
     }
 
-    private static void setup() {
-        int numHumanPlayers = findNumHumanPlayers();
-        int numComPlayers = findNumComPlayers(numHumanPlayers);
-        board = new Board(numHumanPlayers, numComPlayers);
+//    private static void setup() {
+//        int numHumanPlayers = findNumHumanPlayers();
+//        int numComPlayers = findNumComPlayers(numHumanPlayers);
+////        board = new Board(numHumanPlayers, numComPlayers, );
+//
+//        // assign player names
+//        for (int i = 0; i < numHumanPlayers; i++) {
+//            System.out.print("Enter a name for player " + (i + 1) + ": ");
+//            String name = input.next();
+//            board.getPlayers().get(i).setName(name);
+//        }
+//        System.out.println();
+//
+//        // assign com player names
+//        int comCount = 1;
+//        for (int i = numHumanPlayers; i < numHumanPlayers + numComPlayers; i++) {
+//            board.getPlayers().get(i).setName("Com " + comCount);
+//            comCount++;
+//        }
+//
+//        // print player names
+//        int playerCount = 1;
+//        for (Player player : board.getPlayers()) {
+//            System.out.println("Player " + playerCount + ": " + player.getName());
+//            playerCount++;
+//        }
+//
+////        Delay.pause(1.5).join();
+//
+//        System.out.println("\n" +
+//                "     .d8888b.  888                     888    \n" +
+//                "    d88P  Y88b 888                     888    \n" +
+//                "    Y88b.      888                     888    \n" +
+//                "     \"Y888b.   888888  8888b.  888d888 888888 \n" +
+//                "        \"Y88b. 888        \"88b 888P\"   888    \n" +
+//                "          \"888 888    .d888888 888     888    \n" +
+//                "    Y88b  d88P Y88b.  888  888 888     Y88b.  \n" +
+//                "     \"Y8888P\"   \"Y888 \"Y888888 888      \"Y888 \n\n");
+//
+////        Delay.pause(1.5).join();
+//    }
 
-        // assign player names
-        for (int i = 0; i < numHumanPlayers; i++) {
-            System.out.print("Enter a name for player " + (i + 1) + ": ");
-            String name = input.next();
-            board.getPlayers().get(i).setName(name);
-        }
-        System.out.println();
+//    private static int findNumHumanPlayers() {
+//        System.out.println("How many human players are there? (1-5)");
+//        int numPlayers = input.nextInt();
+//        while (numPlayers < 1 || numPlayers > 5) {
+//            System.out.println("Please enter a number between 1 and 5.");
+//            numPlayers = input.nextInt();
+//        }
+//        return numPlayers;
+//    }
 
-        // assign com player names
-        int comCount = 1;
-        for (int i = numHumanPlayers; i < numHumanPlayers + numComPlayers; i++) {
-            board.getPlayers().get(i).setName("Com " + comCount);
-            comCount++;
-        }
-
-        // print player names
-        int playerCount = 1;
-        for (Player player : board.getPlayers()) {
-            System.out.println("Player " + playerCount + ": " + player.getName());
-            playerCount++;
-        }
-
-//        Delay.pause(1.5).join();
-
-        System.out.println("\n" +
-                "     .d8888b.  888                     888    \n" +
-                "    d88P  Y88b 888                     888    \n" +
-                "    Y88b.      888                     888    \n" +
-                "     \"Y888b.   888888  8888b.  888d888 888888 \n" +
-                "        \"Y88b. 888        \"88b 888P\"   888    \n" +
-                "          \"888 888    .d888888 888     888    \n" +
-                "    Y88b  d88P Y88b.  888  888 888     Y88b.  \n" +
-                "     \"Y8888P\"   \"Y888 \"Y888888 888      \"Y888 \n\n");
-
-//        Delay.pause(1.5).join();
-    }
-
-    private static int findNumHumanPlayers() {
-        System.out.println("How many human players are there? (1-5)");
-        int numPlayers = input.nextInt();
-        while (numPlayers < 1 || numPlayers > 5) {
-            System.out.println("Please enter a number between 1 and 5.");
-            numPlayers = input.nextInt();
-        }
-        return numPlayers;
-    }
-
-    private static int findNumComPlayers(int numHumanPlayers) {
-        if (numHumanPlayers == MAX_PLAYERS) {
-            return 0;
-        }
-
-        int maxComPlayers = MAX_PLAYERS - numHumanPlayers;
-
-        System.out.println("How many computer players are there?" + " (0-" + maxComPlayers + ")");
-        int numPlayers = input.nextInt();
-        while (numPlayers < 0 || numPlayers > maxComPlayers) {
-            System.out.println("Please enter a number between 0 and " + maxComPlayers + ".");
-            numPlayers = input.nextInt();
-        }
-        return numPlayers;
-    }
+//    private static int findNumComPlayers(int numHumanPlayers) {
+//        if (numHumanPlayers == MAX_PLAYERS) {
+//            return 0;
+//        }
+//
+//        int maxComPlayers = MAX_PLAYERS - numHumanPlayers;
+//
+//        System.out.println("How many computer players are there?" + " (0-" + maxComPlayers + ")");
+//        int numPlayers = input.nextInt();
+//        while (numPlayers < 0 || numPlayers > maxComPlayers) {
+//            System.out.println("Please enter a number between 0 and " + maxComPlayers + ".");
+//            numPlayers = input.nextInt();
+//        }
+//        return numPlayers;
+//    }
 
 }

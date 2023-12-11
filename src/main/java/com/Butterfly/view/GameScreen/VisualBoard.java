@@ -1,6 +1,7 @@
 package com.Butterfly.view.GameScreen;
 
 import com.Butterfly.model.board.Board;
+import com.Butterfly.model.board.BoardObserver;
 import com.Butterfly.model.board.GlobalDir;
 import com.Butterfly.model.cards.Card;
 import javafx.geometry.Insets;
@@ -17,7 +18,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
-public class VisualBoard extends GridPane {
+public class VisualBoard extends GridPane implements BoardObserver {
 
     public static final int CARD_SIZE = 60;
     public static final int PADDING = 10;
@@ -28,9 +29,15 @@ public class VisualBoard extends GridPane {
     private final ArrayList<ImageView> movingImages;
     private final Set<ImageView> takenCards;
 
+    private ArrayList<BoardObserver> observers = new ArrayList<>();
+
+
+
     public VisualBoard(Board board) {
 
         this.board = board;
+
+        board.addObserver(this); // Registering VisualBoard as an observer
 
         this.setPadding(new Insets(10));
         this.setHgap(PADDING);
@@ -42,6 +49,23 @@ public class VisualBoard extends GridPane {
 
         overlays = new Rectangle[board.getHeight()][board.getWidth()];
         initializeBoard();
+    }
+
+    @Override
+    public void onBoardStateChanged(boolean readyToMove) {
+        if (readyToMove) {
+            System.out.println("Ready to move!");
+            // Perform actions when readyToMove is true
+            enableClicking(true);
+
+            board.setReadyToMove(false); // ending statement
+
+        } else {
+            System.out.println("Not ready to move!");
+            // Perform actions when readyToMove is false
+
+            enableClicking(false);
+        }
     }
 
     private void initializeBoard() {
@@ -223,6 +247,14 @@ public class VisualBoard extends GridPane {
 //            this.getChildren().add(empty);
 //        }
 //        takenCards.clear();
+    }
+
+    private void enableClicking(boolean clickable) {
+        for (Rectangle[] row : overlays) {
+            for (Rectangle overlay : row) {
+                overlay.setDisable(!clickable);
+            }
+        }
     }
 
 }

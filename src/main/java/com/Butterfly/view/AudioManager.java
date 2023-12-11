@@ -84,7 +84,7 @@ public final class AudioManager {
     }
 
     private Media loadMedia(final String resourcePath) {
-        System.out.println("Loading media: " + resourcePath);
+//        System.out.println("Loading media: " + resourcePath);
         return new Media(getClass().getResource(resourcePath).toExternalForm()); // don't know which one works
     }
 

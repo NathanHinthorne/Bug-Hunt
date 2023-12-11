@@ -23,6 +23,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 
 public class IntroScreen {
     private final Stage introStage;
@@ -32,12 +33,12 @@ public class IntroScreen {
     private Slider humanPlayerSlider;
     private Slider comPlayerSlider;
     private CheckBox checkBox1;
-    private CheckBox checkBox2;
-    private TextField textField1;
-    private TextField textField2;
+    private ArrayList<TextField> playerNames;
 
     public IntroScreen(final Stage introStage) {
         this.introStage = introStage;
+        playerNames = new ArrayList<>();
+
         setupButton();
         setupIcon();
         setupScene();
@@ -172,21 +173,22 @@ public class IntroScreen {
 
 
         checkBox1 = new CheckBox("Option 1");
-        checkBox2 = new CheckBox("Option 2");
 
-        textField1 = new TextField();
-        textField2 = new TextField();
+        for (int i = 0; i < humanPlayerSlider.getValue(); i++) {
+            playerNames.add(new TextField());
+        }
 
         VBox controlsBox = new VBox(10);
         controlsBox.getChildren().addAll(
                 new VBox(10, new Label("Number of Human Players: "), humanPlayerSlider),
                 new VBox(10, new Label("Number of Computer Players: "), comPlayerSlider),
-                checkBox1,
-                checkBox2,
-                new VBox(10, new Label("Text 1:"), textField1),
-                new VBox(10, new Label("Text 2:"), textField2),
-                startButton
+                checkBox1
         );
+        for (int i = 0; i < humanPlayerSlider.getValue(); i++) {
+            controlsBox.getChildren().add(new VBox(10, new Label("Player " + (i + 1) + " Name:"), playerNames.get(i)));
+        }
+        controlsBox.getChildren().add(startButton);
+
 
         // Set the alignment for the controls box
         controlsBox.setAlignment(Pos.CENTER_LEFT);
@@ -213,15 +215,13 @@ public class IntroScreen {
         return checkBox1.isSelected();
     }
 
-    public boolean getCheckBox2() {
-        return checkBox2.isSelected();
-    }
 
-    public String getTextField1() {
-        return textField1.getText();
-    }
 
-    public String getTextField2() {
-        return textField2.getText();
+    public ArrayList<String> getPlayerNames() {
+        ArrayList<String> names = new ArrayList<>();
+        for (TextField name : playerNames) {
+            names.add(name.getText());
+        }
+        return names;
     }
 }

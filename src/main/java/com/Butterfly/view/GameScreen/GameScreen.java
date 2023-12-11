@@ -16,6 +16,9 @@ import java.io.InputStream;
 public class GameScreen {
     private final Stage primaryStage;
     private final Board board;
+    private VisualBoard visualBoard;
+    private PlayerCollections playerCollections;
+    private GameInfo gameInfo;
 
     public GameScreen(final Stage primaryStage, final Board board, final boolean debugMode) {
         this.primaryStage = primaryStage;
@@ -62,9 +65,9 @@ public class GameScreen {
 
         // the main content
         BorderPane content = new BorderPane();
-        GridPane visualBoard = new VisualBoard(board);
-        Pane playerCollections = new PlayerCollections(board);
-        Pane gameInfo = new GameInfo(board);
+        visualBoard = new VisualBoard(board);
+        playerCollections = new PlayerCollections(board);
+        gameInfo = new GameInfo(board);
 
         playerCollections.setPrefWidth(350);
         gameInfo.setPrefWidth(200);
