@@ -13,7 +13,7 @@ public final class AudioManager {
 
     // Constants
 
-    private static final double VOLUME_MODIFIER = 0.0; // 0.6
+    private static final double VOLUME_MODIFIER = 0.5; // 0.6
 
 
 
@@ -44,7 +44,7 @@ public final class AudioManager {
     public Media step3; // source: Valve's Team Fortress 2
     public Media step4; // source: Valve's Team Fortress 2
     public Media heroOof;
-    public Media heroCollectPillar;
+    public Media collect;
 
     // DIALOGUE
     public Media talking;
@@ -73,7 +73,7 @@ public final class AudioManager {
         step3 = loadMedia("/audio/sfx/step3.wav");
         step4 = loadMedia("/audio/sfx/step4.wav");
         heroOof = loadMedia("/audio/sfx/oof.wav");
-        heroCollectPillar = loadMedia("/audio/sfx/collect.wav");
+        collect = loadMedia("/audio/sfx/collect.wav");
 
         // DIALOGUE
         talking = loadMedia("/audio/sfx/dialogue_talking.wav");

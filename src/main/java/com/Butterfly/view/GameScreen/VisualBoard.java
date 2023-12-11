@@ -5,6 +5,7 @@ import com.Butterfly.model.board.BoardObserver;
 import com.Butterfly.model.board.GlobalDir;
 import com.Butterfly.model.cards.Card;
 import javafx.geometry.Insets;
+import javafx.scene.Node;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Background;
@@ -15,8 +16,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
 
 public class VisualBoard extends GridPane implements BoardObserver {
 
@@ -26,12 +25,8 @@ public class VisualBoard extends GridPane implements BoardObserver {
 
     private final Board board;
     private final Rectangle[][] overlays;
-    private final ArrayList<ImageView> movingImages;
-    private final Set<ImageView> takenCards;
-
-    private ArrayList<BoardObserver> observers = new ArrayList<>();
-
-
+    private final ImageView[][] cards;
+    private final ArrayList<Node> oldImages;
 
     public VisualBoard(Board board) {
 
@@ -44,10 +39,10 @@ public class VisualBoard extends GridPane implements BoardObserver {
         this.setVgap(PADDING);
         setBackground(new Background(new BackgroundFill(Color.LIGHTGRAY, CornerRadii.EMPTY, Insets.EMPTY)));
 
-        movingImages = new ArrayList<>();
-        takenCards = new HashSet<>();
+        oldImages = new ArrayList<>();
 
         overlays = new Rectangle[board.getHeight()][board.getWidth()];
+        cards = new ImageView[board.getHeight()][board.getWidth()];
         initializeBoard();
     }
 
@@ -55,16 +50,15 @@ public class VisualBoard extends GridPane implements BoardObserver {
     public void onBoardStateChanged(boolean readyToMove) {
         if (readyToMove) {
             System.out.println("Ready to move!");
-            // Perform actions when readyToMove is true
+            board.highlightCards();
             enableClicking(true);
-
-            board.setReadyToMove(false); // ending statement
 
         } else {
             System.out.println("Not ready to move!");
-            // Perform actions when readyToMove is false
 
+            update();
             enableClicking(false);
+            board.playerMoveCompleted(); // ending statement
         }
     }
 
@@ -80,9 +74,11 @@ public class VisualBoard extends GridPane implements BoardObserver {
         updateHedgehog();
     }
 
-
     public void update() {
         clearOldImages();
+
+        // get card the hedgehog is on
+
 
         // TODO remove card that was taken? or is it already gone?
 
@@ -91,15 +87,15 @@ public class VisualBoard extends GridPane implements BoardObserver {
 
                 updateCardOverlay(x, y);
 
-                if (board.getCard(x, y).isEmpty()) {
-                    ImageView imageView = createCardView(new Image("/images/empty.png"));
-                    this.add(imageView, x, y);
+//                if (board.getCard(x, y).isEmpty()) {
+//                    ImageView imageView = createCardView(new Image("/images/empty.png"));
+//                    this.add(imageView, x, y);
 //                    takenCards.add(imageView);
-
-                    if (board.hasNet(x, y)) { // move this to initializeBoard()?
-                        displayNet(x, y);
-                    }
-                }
+//
+//                    if (board.hasNet(x, y)) { // move this to initializeBoard()?
+//                        displayNet(x, y);
+//                    }
+//                }
             }
         }
 
@@ -110,7 +106,7 @@ public class VisualBoard extends GridPane implements BoardObserver {
         ImageView imageView = createHedgehogImage(board.getHedgehog().getImage());
         rotateHedgehog(imageView, board.getHedgehog().getDir());
         this.add(imageView, board.getHedgehog().getX(), board.getHedgehog().getY());
-        movingImages.add(imageView);
+        oldImages.add(imageView);
     }
 
     private void rotateHedgehog(ImageView imageView, GlobalDir dir) {
@@ -172,9 +168,11 @@ public class VisualBoard extends GridPane implements BoardObserver {
             if (board.getCard(x, y).isHighlighted()) {
                 overlay.setFill(Color.TRANSPARENT);
 
-                //TODO call method to perform move action
+                // TODO call method to perform move action
                 board.move(x, y);
                 update();
+
+                board.setReadyToMove(false);
             }
         });
 
@@ -196,8 +194,9 @@ public class VisualBoard extends GridPane implements BoardObserver {
 
     private void placeCard(int x, int y) {
         Card card = board.getCard(x, y);
-        ImageView imageView = createCardView(card.getImage());
-        this.add(imageView, x, y);
+        ImageView cardImage = createCardView(card.getImage());
+        cards[x][y] = cardImage;
+        this.add(cardImage, x, y);
     }
 
     /**
@@ -226,27 +225,20 @@ public class VisualBoard extends GridPane implements BoardObserver {
     private ImageView createHedgehogImage(Image image) {
         ImageView imageView = new ImageView(image);
 
-        imageView.setFitHeight(CARD_SIZE/1.2);
-        imageView.setFitWidth(CARD_SIZE/1.2);
+        imageView.setFitHeight(CARD_SIZE / 1.2);
+        imageView.setFitWidth(CARD_SIZE / 1.2);
 
         // adjust to center
-        imageView.setTranslateX(CARD_SIZE/10);
+        imageView.setTranslateX(CARD_SIZE / 10);
 
         return imageView;
     }
 
     private void clearOldImages() {
-        for (ImageView imageView : movingImages) {
-            this.getChildren().remove(imageView);
+        for (Node thing : oldImages) {
+            this.getChildren().remove(thing);
         }
-        movingImages.clear();
-
-//        for (ImageView imageView : takenCards) {
-//            this.getChildren().remove(imageView);
-//            ImageView empty = createCardView(new Image("/images/empty.png"));
-//            this.getChildren().add(empty);
-//        }
-//        takenCards.clear();
+        oldImages.clear();
     }
 
     private void enableClicking(boolean clickable) {

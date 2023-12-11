@@ -17,7 +17,6 @@ import javafx.scene.layout.*;
 import javafx.geometry.Insets;
 import javafx.stage.Stage;
 
-
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Scanner;
@@ -28,10 +27,8 @@ public class App extends Application {
     public static final boolean DEBUG_MODE = true;
     public static final int MAX_PLAYERS = 5;
 
-
-
     // game data
-    private static boolean gameRunning = true;
+    public static GameState gameState;
     private static int roundCount = 0;
 
     // GUI
@@ -39,12 +36,10 @@ public class App extends Application {
     private IntroScreen introScreen;
     private GameScreen gameScreen;
 
-
     // extra stuff
     private static Board board;
     private static AudioManager audio;
     private static Scanner input = new Scanner(System.in); // for testing
-
 
     public static void main(String[] args) {
         launch(args);
@@ -63,7 +58,6 @@ public class App extends Application {
             titleScreen.setStartButtonListener(event -> showIntroScreen(primaryStage));
         }
     }
-
 
     private void showIntroScreen(Stage primaryStage) {
         audio.playSFX(audio.mouseClick, 0.5);
@@ -90,18 +84,18 @@ public class App extends Application {
         int numberOfHumanPlayers = introScreen.getNumberOfHumanPlayers();
         int numberOfComPlayers = introScreen.getNumberOfComputerPlayers();
         ArrayList<String> playerNames = introScreen.getPlayerNames();
-        //TODO read rest of data...
+        // TODO read rest of data...
 
         // now that we have the data, we can create the board
         board = new Board(numberOfHumanPlayers, numberOfComPlayers, playerNames);
     }
 
-    private void startGame(Stage gameStage) { //TODO change all text related methods to GUI ones
+    private void startGame(Stage gameStage) { // TODO change all text related methods to GUI ones
         // game structure
-//        textIntro();
-//        setup();
+        // textIntro();
+        // setup();
         gameLoop();
-//        ending();
+        // ending();
     }
 
     private void windowSetup(Stage primaryStage) {
@@ -123,7 +117,6 @@ public class App extends Application {
         content.setRight(gameInfo);
         content.setLeft(playerCollections);
 
-
         // put padding between the content and the window
         BorderPane.setMargin(content, new Insets(10));
         root.setCenter(content); // put the main content in the center of the root
@@ -143,149 +136,52 @@ public class App extends Application {
         primaryStage.getIcons().add(icon);
     }
 
-
-    private static void ending() {
-        System.out.println("" +
-                " .d8888b.                                                                           888 \n" +
-                "d88P  Y88b                                                                          888 \n" +
-                "888    888                                                                          888 \n" +
-                "888         8888b.  88888b.d88b.   .d88b.         .d88b.  888  888  .d88b.  888d888 888 \n" +
-                "888  88888     \"88b 888 \"888 \"88b d8P  Y8b       d88\"\"88b 888  888 d8P  Y8b 888P\"   888 \n" +
-                "888    888 .d888888 888  888  888 88888888       888  888 Y88  88P 88888888 888     Y8P \n" +
-                "Y88b  d88P 888  888 888  888  888 Y8b.           Y88..88P  Y8bd8P  Y8b.     888      \"  \n" +
-                " \"Y8888P88 \"Y888888 888  888  888  \"Y8888         \"Y88P\"    Y88P    \"Y8888  888     888 \n\n");
-
-        Delay.pause(1.5).join();
-
-        // final scores
-
-        int playerCount = 1;
-        for (Player player : board.getPlayers()) {
-
-            System.out.println("*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-");
-            System.out.println("Player " + playerCount + " - \"" + player.getName() + "\"\n");
-            player.printTextCollection();
-            System.out.println("Total Points: " + player.getScore());
-            System.out.println("*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-\n");
-
-
-            playerCount++;
-        }
-    }
-
     private static void gameLoop() {
-        while (gameRunning) {
+        while (gameState != GameState.GAME_OVER) {
             // loop through players' turns
             for (Player player : board.getPlayers()) {
 
                 playerTurn(player);
             }
 
-
             roundCount++;
 
             // end of loop, check for game over
             if (!board.canMove()) {
-                gameRunning = false;
+                gameState = GameState.GAME_OVER;
             }
         }
     }
 
-    private static void playerTurn(Player player)  {
+    private static void playerTurn(Player player) {
 
         board.setCurrentPlayer(player);
+        gameState = GameState.WAITING_FOR_PLAYER_MOVE;
         board.setReadyToMove(true);
-        audio.playSFX(audio.step1, 0.5);
 
-        // collect card
-        Card card = board.takeCard(board.getHedgehog().getX(), board.getHedgehog().getY());
+        board.setMoveCallback(() -> {
 
-        System.out.println();
-        if (player.isHuman()) {
-            if (card.isEmpty()) {
-                System.out.println("\nThat square is empty.");
-                System.out.println("Press try again.\n");
-                playerTurn(player);
-                return;
-            }
+            gameState = GameState.FINISHED_PLAYER_MOVE;
 
+            audio.playSFX(audio.step1, 0.5);
+
+            // take card from board
+            Card card = board.takeCard(board.getHedgehog().getX(), board.getHedgehog().getY());
+
+            // move card into player's collection
             player.collectCard(card);
             System.out.println(player.getName() + " collected a " + card.getFamily() + " card.");
             System.out.println();
-            Delay.pause(1000).join();
-            System.out.println("▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄");
-            System.out.println();
-        }
+//            Delay.pause(1).join(); // freezes screen, not sure why
 
-        // play sfx
+            audio.playSFX(audio.collect, 0.8); // TODO play sfx based on card family (i.e. butterfly wing flapping,
+                                               // grasshopper boing, etc.)
+        });
     }
 
-//    private static void setup() {
-//        int numHumanPlayers = findNumHumanPlayers();
-//        int numComPlayers = findNumComPlayers(numHumanPlayers);
-////        board = new Board(numHumanPlayers, numComPlayers, );
-//
-//        // assign player names
-//        for (int i = 0; i < numHumanPlayers; i++) {
-//            System.out.print("Enter a name for player " + (i + 1) + ": ");
-//            String name = input.next();
-//            board.getPlayers().get(i).setName(name);
-//        }
-//        System.out.println();
-//
-//        // assign com player names
-//        int comCount = 1;
-//        for (int i = numHumanPlayers; i < numHumanPlayers + numComPlayers; i++) {
-//            board.getPlayers().get(i).setName("Com " + comCount);
-//            comCount++;
-//        }
-//
-//        // print player names
-//        int playerCount = 1;
-//        for (Player player : board.getPlayers()) {
-//            System.out.println("Player " + playerCount + ": " + player.getName());
-//            playerCount++;
-//        }
-//
-////        Delay.pause(1.5).join();
-//
-//        System.out.println("\n" +
-//                "     .d8888b.  888                     888    \n" +
-//                "    d88P  Y88b 888                     888    \n" +
-//                "    Y88b.      888                     888    \n" +
-//                "     \"Y888b.   888888  8888b.  888d888 888888 \n" +
-//                "        \"Y88b. 888        \"88b 888P\"   888    \n" +
-//                "          \"888 888    .d888888 888     888    \n" +
-//                "    Y88b  d88P Y88b.  888  888 888     Y88b.  \n" +
-//                "     \"Y8888P\"   \"Y888 \"Y888888 888      \"Y888 \n\n");
-//
-////        Delay.pause(1.5).join();
-//    }
+    private static void ending() {
 
-//    private static int findNumHumanPlayers() {
-//        System.out.println("How many human players are there? (1-5)");
-//        int numPlayers = input.nextInt();
-//        while (numPlayers < 1 || numPlayers > 5) {
-//            System.out.println("Please enter a number between 1 and 5.");
-//            numPlayers = input.nextInt();
-//        }
-//        return numPlayers;
-//    }
+        // erase visual board to make room for final scores
 
-//    private static int findNumComPlayers(int numHumanPlayers) {
-//        if (numHumanPlayers == MAX_PLAYERS) {
-//            return 0;
-//        }
-//
-//        int maxComPlayers = MAX_PLAYERS - numHumanPlayers;
-//
-//        System.out.println("How many computer players are there?" + " (0-" + maxComPlayers + ")");
-//        int numPlayers = input.nextInt();
-//        while (numPlayers < 0 || numPlayers > maxComPlayers) {
-//            System.out.println("Please enter a number between 0 and " + maxComPlayers + ".");
-//            numPlayers = input.nextInt();
-//        }
-//        return numPlayers;
-//    }
-
+    }
 }

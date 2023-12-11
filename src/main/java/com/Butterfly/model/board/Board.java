@@ -1,5 +1,7 @@
 package com.Butterfly.model.board;
 
+import com.Butterfly.controller.App;
+import com.Butterfly.controller.GameState;
 import com.Butterfly.model.cards.*;
 import com.Butterfly.model.players.ComputerPlayer;
 import com.Butterfly.model.players.HumanPlayer;
@@ -26,6 +28,7 @@ public class Board {
     private Player currentPlayer;
     private boolean readyToMove = false;
     private final List<BoardObserver> observers = new ArrayList<>();
+    private MoveCallback moveCallback;
 
     public Board(int numberOfHumanPlayers, int numberOfComputerPlayers, ArrayList<String> playerNames) {
 
@@ -53,29 +56,26 @@ public class Board {
     }
 
     private Hedgehog createHedgehog() {
-        int x = 1 + RANDOM.nextInt(gridWidth-2);
-        int y = 1 + RANDOM.nextInt(gridHeight-2);
+        int x = 1 + RANDOM.nextInt(gridWidth - 2);
+        int y = 1 + RANDOM.nextInt(gridHeight - 2);
         return Hedgehog.create(x, y, GlobalDir.WEST);
     }
 
     private Card[][] createGrid(int numberOfPlayers) {
 
-        if (numberOfPlayers == 2){
+        if (numberOfPlayers == 2) {
             gridHeight = 6;
             gridWidth = 6;
             return new Card[6][6];
-        }
-        else if (numberOfPlayers == 3) {
+        } else if (numberOfPlayers == 3) {
             gridHeight = 7;
             gridWidth = 7;
             return new Card[7][7];
-        }
-        else if (numberOfPlayers == 4) {
+        } else if (numberOfPlayers == 4) {
             gridHeight = 8;
             gridWidth = 8;
             return new Card[8][8];
-        }
-        else if (numberOfPlayers == 5) {
+        } else if (numberOfPlayers == 5) {
             gridHeight = 9;
             gridWidth = 9;
             return new Card[9][9];
@@ -87,7 +87,8 @@ public class Board {
             return new Card[4][4]; // funny/error case
         }
 
-        else throw new IllegalArgumentException("Number of players must be between 2 and 5");
+        else
+            throw new IllegalArgumentException("Number of players must be between 2 and 5");
     }
 
     private List<Card> createDrawPile() {
@@ -196,9 +197,10 @@ public class Board {
         for (int y = 0; y < gridHeight; y++) {
             for (int x = 0; x < gridWidth; x++) {
 
-                Card card = drawPile.remove(0); //? need to randomize drawPile first?
+                Card card = drawPile.remove(0); // ? need to randomize drawPile first?
                 placeCard(card, x, y);
-//                System.out.println("Placing card " + card.toString() + " at (" + x + ", " + y  + ")");
+                // System.out.println("Placing card " + card.toString() + " at (" + x + ", " + y
+                // + ")");
 
                 if (RANDOM.nextDouble() < NET_CHANCE) { // chance of adding net to square
                     getCard(x, y).placeNet();
@@ -207,58 +209,13 @@ public class Board {
         }
     }
 
-    public void move(GlobalDir dir, int spaces) {
-        if (dir == GlobalDir.NORTH && hedgehog.getDir()
-                == GlobalDir.SOUTH ||
-                dir == GlobalDir.EAST && hedgehog.getDir()
-                        == GlobalDir.WEST ||
-                dir == GlobalDir.WEST && hedgehog.getDir()
-                        == GlobalDir.EAST ||
-                dir == GlobalDir.SOUTH && hedgehog.getDir()
-                        == GlobalDir.NORTH) {
-
-            System.out.println("You can't move the hedgehog backwards!\n");
-            return;
-        }
-        hedgehog.setDir(dir);
-
-        if (dir == GlobalDir.NORTH) {
-//            if (hedgehog.getY() - spaces < 0) {
-//                move(dir, spaces - 1);
-//                return;
-//            }
-            hedgehog.setLocation(hedgehog.getX(), hedgehog.getY() - spaces);
-            System.out.println("Moving hedgehog " + spaces + " spaces north");
-
-        } else if (dir == GlobalDir.EAST) {
-//            if (hedgehog.getX() + spaces > gridWidth - 1) {
-//                move(dir, spaces - 1);
-//                return;
-//            }
-            hedgehog.setLocation(hedgehog.getX() + spaces, hedgehog.getY());
-            System.out.println("Moving hedgehog " + spaces + " spaces east");
-
-        } else if (dir == GlobalDir.WEST) {
-//            if (hedgehog.getX() - spaces < 0) {
-//                move(dir, spaces - 1);
-//                return;
-//            }
-            hedgehog.setLocation(hedgehog.getX() - spaces, hedgehog.getY());
-            System.out.println("Moving hedgehog " + spaces + " spaces west");
-
-        } else if (dir == GlobalDir.SOUTH) {
-//            if (hedgehog.getY() + spaces > gridHeight - 1) {
-//                move(dir, spaces - 1);
-//                return;
-//            }
-            hedgehog.setLocation(hedgehog.getX(), hedgehog.getY() + spaces);
-            System.out.println("Moving hedgehog " + spaces + " spaces south");
-        }
-
-        highlightCards();
-    }
-
     public void move(int x, int y) {
+//        if (!canMove()) {
+//            throw new IllegalStateException("Hedgehog cannot move");
+//        }
+
+        App.gameState = GameState.PROCESSING_PLAYER_MOVE;
+
         hedgehog.setMarker();
         hedgehog.setLocation(x, y);
         System.out.println("Moving hedgehog to (" + x + ", " + y + ")");
@@ -267,8 +224,6 @@ public class Board {
         System.out.println("Facing " + hedgehog.getDir().toString());
 
         System.out.println("On top of " + getCard(x, y).getFamily() + " " + getCard(x, y).getType() + "\n");
-
-        highlightCards();
     }
 
     @Override
@@ -279,17 +234,13 @@ public class Board {
             for (int x = 0; x < gridWidth; x++) {
 
                 if (hedgehog.getX() == x && hedgehog.getY() == y) {
-                    if (hedgehog.getDir()
-                            == GlobalDir.NORTH)
+                    if (hedgehog.getDir() == GlobalDir.NORTH)
                         sb.append("█↑  ");
-                    else if (hedgehog.getDir()
-                            == GlobalDir.EAST)
+                    else if (hedgehog.getDir() == GlobalDir.EAST)
                         sb.append("█→  ");
-                    else if (hedgehog.getDir()
-                            == GlobalDir.SOUTH)
+                    else if (hedgehog.getDir() == GlobalDir.SOUTH)
                         sb.append("█↓  ");
-                    else if (hedgehog.getDir()
-                            == GlobalDir.WEST)
+                    else if (hedgehog.getDir() == GlobalDir.WEST)
                         sb.append("█←  ");
                 } else {
                     sb.append(getCard(x, y).toString() + "  ");
@@ -315,9 +266,8 @@ public class Board {
     public void highlightCards() {
 
         unhighlightAllCards();
-        numHighlightedCards = 0;
 
-        switch(hedgehog.getDir()) {
+        switch (hedgehog.getDir()) {
             case NORTH:
                 scanNorth();
                 break;
@@ -340,31 +290,32 @@ public class Board {
             for (int y = 0; y < gridHeight; y++)
                 getCard(x, y).setHighlighted(false);
         }
+        numHighlightedCards = 0;
     }
 
     // approach #2 - bad performance??
-//    private void scanNorth2() {
-//        int hedgehogX = hedgehog.getX();
-//        int hedgehogY = hedgehog.getY();
-//
-//        for (int y = 0; y < gridHeight; y++) {
-//            for (int x = 0; x < gridWidth; x++) {
-//
-//                Card card = getCard(x, y);
-//                if ((hedgehogX == x || hedgehogY == y) && y < hedgehogY && !card.isEmpty()) {
-//                    card.setHighlighted(true);
-//
-//                } else {
-//                    card.setHighlighted(false);
-//                }
-//            }
-//        }
-//    }
+    // private void scanNorth2() {
+    // int hedgehogX = hedgehog.getX();
+    // int hedgehogY = hedgehog.getY();
+    //
+    // for (int y = 0; y < gridHeight; y++) {
+    // for (int x = 0; x < gridWidth; x++) {
+    //
+    // Card card = getCard(x, y);
+    // if ((hedgehogX == x || hedgehogY == y) && y < hedgehogY && !card.isEmpty()) {
+    // card.setHighlighted(true);
+    //
+    // } else {
+    // card.setHighlighted(false);
+    // }
+    // }
+    // }
+    // }
     private void scanNorth() {
         int x = hedgehog.getX();
         int y = hedgehog.getY();
 
-        for (int scanDist = y-1; scanDist >= 0; scanDist--) {
+        for (int scanDist = y - 1; scanDist >= 0; scanDist--) {
             Card card = getCard(x, scanDist);
             if (!card.isEmpty() && !hasHedgehog(x, scanDist)) {
                 card.setHighlighted(true);
@@ -384,7 +335,7 @@ public class Board {
         int x = hedgehog.getX();
         int y = hedgehog.getY();
 
-        for (int scanDist = x+1; scanDist < gridWidth; scanDist++) {
+        for (int scanDist = x + 1; scanDist < gridWidth; scanDist++) {
             Card card = getCard(scanDist, y);
             if (!card.isEmpty() && !hasHedgehog(scanDist, y)) {
                 card.setHighlighted(true);
@@ -404,7 +355,7 @@ public class Board {
         int x = hedgehog.getX();
         int y = hedgehog.getY();
 
-        for (int scanDist = x-1; scanDist >= 0; scanDist--) {
+        for (int scanDist = x - 1; scanDist >= 0; scanDist--) {
             Card card = getCard(scanDist, y);
             if (!card.isEmpty() && !hasHedgehog(scanDist, y)) {
                 card.setHighlighted(true);
@@ -424,7 +375,7 @@ public class Board {
         int x = hedgehog.getX();
         int y = hedgehog.getY();
 
-        for (int scanDist = y+1; scanDist < gridHeight; scanDist++) {
+        for (int scanDist = y + 1; scanDist < gridHeight; scanDist++) {
             Card card = getCard(x, scanDist);
             if (!card.isEmpty() && !hasHedgehog(x, scanDist)) {
                 card.setHighlighted(true);
@@ -440,7 +391,6 @@ public class Board {
         }
     }
 
-
     public boolean hasNet(int x, int y) {
         return getCard(x, y).hasNet();
     }
@@ -452,7 +402,6 @@ public class Board {
     public void placeCard(Card card, int x, int y) {
         grid[x][y] = card;
     }
-
 
     public Card takeCard(int x, int y) {
         Card temp = grid[x][y];
@@ -485,9 +434,9 @@ public class Board {
         currentPlayer = player;
     }
 
-
     /**
      * Registers an observer to be notified when the board state changes
+     * 
      * @param observer the observer to register
      */
     public void addObserver(BoardObserver observer) {
@@ -496,6 +445,7 @@ public class Board {
 
     /**
      * Sets the state of the board and notifies observers
+     * 
      * @param ready true if the hedgehog is ready to move, false otherwise
      */
     public void setReadyToMove(boolean ready) {
@@ -505,11 +455,22 @@ public class Board {
 
     /**
      * Notifies observers that the board state has changed
+     * 
      * @param readyToMove true if the hedgehog is ready to move, false otherwise
      */
     private void notifyObservers(boolean readyToMove) {
         for (BoardObserver observer : observers) {
             observer.onBoardStateChanged(readyToMove);
+        }
+    }
+
+    public void setMoveCallback(MoveCallback callback) {
+        this.moveCallback = callback;
+    }
+
+    public void playerMoveCompleted() {
+        if (moveCallback != null) {
+            moveCallback.onMoveCompleted();
         }
     }
 
