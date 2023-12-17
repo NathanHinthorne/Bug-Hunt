@@ -1,33 +1,36 @@
 package com.Butterfly.model.players;
 
-import com.Butterfly.model.board.GlobalDir;
-import com.Butterfly.model.cards.Card;
-import com.Butterfly.model.cards.CardFamily;
+import com.Butterfly.model.cards.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
-public abstract class Player {
+public abstract class Player implements java.io.Serializable {
 
     protected String myName;
-    Map<CardFamily, List<Card>> cardCollection = new TreeMap<>();
     private int myTotalCards;
-    private int myPoints;
+    private int myScore;
+
+    /**
+     * A map of the player's cards, organized by family
+     */
+    Map<CardFamily, ArrayList<Card>> organizedCards = new TreeMap<>();
+
+    /**
+     * A set of the player's cards, not organized
+     */
+    private Set<Card> disorganizedCards;
 
     public Player() {
         myTotalCards = 0;
-        myPoints = 0;
+        myScore = 0;
+        disorganizedCards = new HashSet<>();
 
         for (CardFamily family : CardFamily.values()) {
-            cardCollection.put(family, new ArrayList<>());
+            organizedCards.put(family, new ArrayList<>());
         }
     }
 
-
-    public abstract GlobalDir chooseDirection();
-    public abstract int chooseSpaces();
+    public abstract Card cardToMoveTo();
 
     public abstract boolean isHuman();
 
@@ -40,46 +43,29 @@ public abstract class Player {
     }
 
     public void collectCard(Card card) {
-        //cast card to its family before letting player collect it
 
-        cardCollection.get(card.getFamily()).add(card); // group cards according to their family
+        organizedCards.get(card.getFamily()).add(card); // group cards according to their family
+        disorganizedCards.add(card); // add card to the disorganized set
+
+        // only add points AFTER collecting card (this is important in the getPoints()
+        // method)
+        myScore = 0;
+
+        for (Card cardInGroup : disorganizedCards) {
+            cardInGroup.calculatePoints(organizedCards); // this doesn't modify score, just updates the points of each
+                                                         // card
+            myScore += cardInGroup.getPoints(); // this is where the score is actually updated
+        }
+
         myTotalCards++;
     }
 
-    public Map<CardFamily, List<Card>> getCollection() {
-        return new TreeMap<>(cardCollection); // return a copy, not a reference to the original
+    public Map<CardFamily, ArrayList<Card>> getOrganizedCards() {
+        return new TreeMap<>(organizedCards); // return a copy, not a reference to the original
     }
 
-    public void printTextCollection() {
-        System.out.println(myName + "'s collection:\n");
-        for (CardFamily family : CardFamily.values()) {
-            List<Card> cardGroup = cardCollection.get(family);
-
-            if (!cardGroup.isEmpty()) {
-                System.out.print(family + " - ");
-                for (Card card : cardGroup) {
-                    System.out.print(card.getType() + ", ");
-                }
-                System.out.println();
-            }
-        }
-        System.out.print("\n\n");
-    }
-
-    public void displayCollection() {
-        System.out.println(myName + "'s collection:\n");
-        for (CardFamily family : CardFamily.values()) {
-            List<Card> cardGroup = cardCollection.get(family);
-
-            if (!cardGroup.isEmpty()) {
-                System.out.print(family + " - ");
-                for (Card card : cardGroup) {
-                    System.out.print(card.getType() + ", ");
-                }
-                System.out.println();
-            }
-        }
-        System.out.print("\n\n");
+    public Set<Card> getDisorganizedCards() {
+        return new HashSet<>(disorganizedCards); // return a copy, not a reference to the original
     }
 
     public int getTotalCards() {
@@ -87,6 +73,10 @@ public abstract class Player {
     }
 
     public int getScore() {
-        return myPoints;
+        return myScore;
+    }
+
+    public void addPoints(int points) {
+        myScore += points;
     }
 }

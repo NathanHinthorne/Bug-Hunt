@@ -1,5 +1,6 @@
 package com.Butterfly.model.cards;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -26,18 +27,18 @@ public class Bee extends Card {
     }
 
     @Override
-    public int getPoints(Map<CardFamily, List<Card>> playerCollection) {
+    public void calculatePoints(Map<CardFamily, ArrayList<Card>> playerCollection) {
         int points = 0;
 
         // search for an unpaired honeycomb within the collection, then pair it. Bee = 0 points
         // Otherwise, leave this bee unpaired. Bee = -3 points
 
-        List<Card> honeycombs = playerCollection.get(CardFamily.HONEYCOMB);
-
         if (isPaired) {
             points = PAIRED_VALUE;
 
         } else {
+            ArrayList<Card> honeycombs = playerCollection.get(CardFamily.HONEYCOMB);
+
             for (Card card : honeycombs) {
                 Honeycomb honeycomb = (Honeycomb) card; // cast it first so we can use its methods
 
@@ -45,6 +46,8 @@ public class Bee extends Card {
                     honeycomb.pair();
                     this.pair();
                     points = PAIRED_VALUE;
+                    // should we update the honeycomb's points here too? if we don't, the honeycomb's getPoints() method
+                    // will need to be called again at some point
                     break;
                 }
             }
@@ -53,7 +56,7 @@ public class Bee extends Card {
             }
         }
 
-        return points;
+        myPoints = points;
     }
 
     public boolean isPaired() {

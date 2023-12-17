@@ -1,5 +1,6 @@
 package com.Butterfly.model.cards;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -22,8 +23,8 @@ public class Wasp extends Card {
     }
 
     @Override
-    public int getPoints(Map<CardFamily, List<Card>> playerCollection) {
-        return this.myType.valueOf(); // pretty simple
+    public void calculatePoints(Map<CardFamily, ArrayList<Card>> playerCollection) {
+        myPoints = this.myType.valueOf(); // pretty simple
     }
 
 }

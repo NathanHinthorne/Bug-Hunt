@@ -1,18 +1,27 @@
 package com.Butterfly.model.players;
 
-import com.Butterfly.model.board.GlobalDir;
+import com.Butterfly.model.board.Board;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import com.Butterfly.model.cards.*;
 
 public class ComputerPlayer extends Player {
 
-    @Override
-    public GlobalDir chooseDirection() {
-        System.out.println(myName + "'s turn.");
-        return null;
+    private Board board;
+
+    public ComputerPlayer(Board board) {
+        this.board = board;
     }
 
+
     @Override
-    public int chooseSpaces() {
-        return 0;
+    public Card cardToMoveTo() {
+        // choose random card to move onto
+
+        ArrayList<Card> cards = board.getHighlightedCards();
+        Collections.shuffle(cards);
+        return cards.get(0);
     }
 
     @Override

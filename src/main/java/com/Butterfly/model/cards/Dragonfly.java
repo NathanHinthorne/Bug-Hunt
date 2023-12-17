@@ -1,5 +1,6 @@
 package com.Butterfly.model.cards;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -11,10 +12,6 @@ public class Dragonfly extends Card {
         myImagePath = findImagePath();
     }
 
-//    @Override
-//    public String findImagePath() {
-//        return "/images/error.png";
-//    }
 
     @Override
     public String toString() {
@@ -22,8 +19,8 @@ public class Dragonfly extends Card {
     }
 
     @Override
-    public int getPoints(Map<CardFamily, List<Card>> playerCollection) {
-        int points = 0;
+    public void calculatePoints(Map<CardFamily, ArrayList<Card>> playerCollection) {
+        int points;
 
         List<Card> dragonflies = playerCollection.get(myFamily);
 
@@ -31,16 +28,18 @@ public class Dragonfly extends Card {
         Card maxCard = null;
         for (Card card : dragonflies) {
             if (card.myType.valueOf() > maxPoints) {
-                maxPoints = card.myType.valueOf();
                 maxCard = card;
+                maxPoints = card.myType.valueOf();
             }
         }
 
         if (maxCard == this) { // only count the max dragonfly
-            points = maxPoints;
+            points = this.myType.valueOf();
+        } else {
+            points = 0;
         }
 
-        return points;
+        myPoints = points;
     }
 
 

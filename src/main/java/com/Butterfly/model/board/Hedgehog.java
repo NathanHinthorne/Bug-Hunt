@@ -4,7 +4,7 @@ import javafx.scene.image.Image;
 
 import java.io.InputStream;
 
-public class Hedgehog {
+public class Hedgehog implements java.io.Serializable {
 
     private static Hedgehog instance = null;
     private int currX;
@@ -44,9 +44,9 @@ public class Hedgehog {
         currY = y;
     }
 
-    public void setMarker() {
-        oldX = currX;
-        oldY = currY;
+    public void setOldLocation(int x, int y) {
+        oldX = x;
+        oldY = y;
     }
 
     public int getOldX() {
@@ -87,9 +87,7 @@ public class Hedgehog {
 
     public Image getImage() {
 
-        InputStream stream = getClass().getResourceAsStream("/images/hedgehog3.png");
-//        InputStream stream = getClass().getResourceAsStream("/images/meeple.png");
-
+        InputStream stream = getClass().getResourceAsStream("/images/hedgehog.png");
 
         if (stream == null) {
             throw new NullPointerException("Can't find hedgehog image");

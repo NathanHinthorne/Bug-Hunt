@@ -13,7 +13,7 @@ public final class AudioManager {
 
     // Constants
 
-    private static final double VOLUME_MODIFIER = 0.5; // 0.6
+    private static final double VOLUME_MODIFIER = 0.3; // 0.6
 
 
 
