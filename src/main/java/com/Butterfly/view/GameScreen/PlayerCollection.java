@@ -84,7 +84,7 @@ public class PlayerCollection extends VBox {
     private void addCard(Card card) {
         ImageView cardImage = createCardView(card.getImage());
 
-        Rectangle overlay = createNewCardOverlay(card);
+        Rectangle overlay = createNewCardOverlay();
         quickOverlayGlow(overlay);
 
         // create a stackpane to hold the card and the overlay
@@ -95,13 +95,13 @@ public class PlayerCollection extends VBox {
         cardPane.getChildren().add(cardWithOverlay);
     }
 
-    private Rectangle createNewCardOverlay(Card card) {
+    private Rectangle createNewCardOverlay() {
         Rectangle overlay = new Rectangle(CARD_SIZE, CARD_SIZE, Color.TRANSPARENT); // default color is transparent
         overlay.setArcWidth(CORNER_RADIUS);
         overlay.setArcHeight(CORNER_RADIUS);
 
         overlay.setFill(Color.YELLOW);
-        overlay.setOpacity(0.5);
+        overlay.setOpacity(0.20);
         return overlay;
     }
 
@@ -110,16 +110,16 @@ public class PlayerCollection extends VBox {
         // Create a DropShadow effect
         DropShadow dropShadow = new DropShadow();
         dropShadow.setColor(Color.YELLOW);
-        dropShadow.setRadius(10);
-        dropShadow.setSpread(0.6);
+        dropShadow.setRadius(12);
+        dropShadow.setSpread(0.8);
 
         // Apply the DropShadow effect to the overlay
         overlay.setEffect(dropShadow);
         Timeline timeline = new Timeline(
                 new KeyFrame(Duration.seconds(0), new KeyValue(dropShadow.radiusProperty(), 10.0)),
-                new KeyFrame(Duration.seconds(0.5), new KeyValue(dropShadow.radiusProperty(), 20.0)),
-                new KeyFrame(Duration.seconds(1), new KeyValue(dropShadow.radiusProperty(), 10.0)));
-        timeline.setCycleCount(2);
+                new KeyFrame(Duration.seconds(0.35), new KeyValue(dropShadow.radiusProperty(), 30.0)),
+                new KeyFrame(Duration.seconds(0.7), new KeyValue(dropShadow.radiusProperty(), 10.0)));
+        timeline.setCycleCount(3);
         timeline.setOnFinished(event -> {
             overlay.setEffect(null);
             overlay.setFill(Color.TRANSPARENT);

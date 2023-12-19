@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Map;
 
+import com.Butterfly.model.board.Coordinates;
 import javafx.scene.image.Image;
 
 public abstract class Card implements java.io.Serializable {
@@ -16,6 +17,7 @@ public abstract class Card implements java.io.Serializable {
     private boolean hasNet;
     private boolean hasRevealedNet;
     private boolean isHighlighted;
+    private Coordinates myCoordinates = null;
 
     public Card() {
         isHighlighted = false;
@@ -102,6 +104,14 @@ public abstract class Card implements java.io.Serializable {
 
     public void revealNet() {
         hasRevealedNet = true;
+    }
+
+    public Coordinates getCoordinates() {
+        return myCoordinates;
+    }
+
+    public void setCoordinates(int x, int y) {
+        myCoordinates = new Coordinates(x, y);
     }
 
 }

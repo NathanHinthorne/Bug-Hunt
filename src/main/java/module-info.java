@@ -2,8 +2,7 @@ module Butterfly {
     requires javafx.controls;
     requires javafx.fxml;
     requires javafx.media;
-    requires java.sql;
-    requires java.desktop;
+//    requires mina.core;
 
     exports com.Butterfly.controller;
 }

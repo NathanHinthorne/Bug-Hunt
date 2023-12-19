@@ -1,7 +1,6 @@
 package com.Butterfly.model.cards;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 public class Honeycomb extends Card {
@@ -16,16 +15,17 @@ public class Honeycomb extends Card {
         myImagePath = findImagePath();
     }
 
-//    @Override
-//    public String findImagePath() {
-//        return "/images/error.png";
-//    }
+    // @Override
+    // public String findImagePath() {
+    // return "/images/error.png";
+    // }
 
     @Override
     public void calculatePoints(Map<CardFamily, ArrayList<Card>> playerCollection) {
         int points = 0;
 
-        // search for an unpaired bee within the collection, then pair it. Honeycomb = regular points
+        // search for an unpaired bee within the collection, then pair it. Honeycomb =
+        // regular points
         // Otherwise, leave this honeycomb unpaired. Honeycomb = 0 points
 
         if (isPaired) {
@@ -41,7 +41,8 @@ public class Honeycomb extends Card {
                     bee.pair();
                     this.pair();
                     points = this.getType().valueOf();
-                    // should we update the bee's points here too? if we don't, the bee's getPoints() method
+                    // should we update the bee's points here too? if we don't, the bee's
+                    // getPoints() method
                     // will need to be called again at some point
                     break;
                 }

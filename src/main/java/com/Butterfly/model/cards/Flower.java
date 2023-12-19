@@ -6,7 +6,6 @@ import java.util.Map;
 
 public class Flower extends Card {
 
-
     public Flower(CardFamily theFamily, CardType theType) {
         myFamily = theFamily;
         myType = theType;
@@ -14,10 +13,10 @@ public class Flower extends Card {
         myImagePath = findImagePath();
     }
 
-//    @Override
-//    public String findImagePath() {
-//        return "/images/error.png";
-//    }
+    // @Override
+    // public String findImagePath() {
+    // return "/images/error.png";
+    // }
 
     @Override
     public void calculatePoints(Map<CardFamily, ArrayList<Card>> playerCollection) {

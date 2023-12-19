@@ -4,7 +4,10 @@ import com.Butterfly.model.board.Board;
 
 import java.util.ArrayList;
 import java.util.Collections;
+
+import com.Butterfly.model.board.Coordinates;
 import com.Butterfly.model.cards.*;
+import javafx.geometry.Point2D;
 
 public class ComputerPlayer extends Player {
 
@@ -14,13 +17,11 @@ public class ComputerPlayer extends Player {
         this.board = board;
     }
 
-
     @Override
     public Card cardToMoveTo() {
-        // choose random card to move onto
-
         ArrayList<Card> cards = board.getHighlightedCards();
         Collections.shuffle(cards);
+
         return cards.get(0);
     }
 

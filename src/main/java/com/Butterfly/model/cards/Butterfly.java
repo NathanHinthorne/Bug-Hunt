@@ -30,7 +30,6 @@ public class Butterfly extends Card {
         return card;
     }
 
-
     @Override
     public void calculatePoints(Map<CardFamily, ArrayList<Card>> playerCollection) {
         int points = 0;

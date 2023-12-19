@@ -1,9 +1,10 @@
 package com.Butterfly.controller;
 
 public enum GameState {
-    CURRENT_PLAYER,
-    WAITING_FOR_PLAYER_MOVE,
-    PROCESSING_PLAYER_MOVE,
-    FINISHED_PLAYER_MOVE,
+    WAITING_FOR_PLAYERS,
+    GAME_STARTING,
+    PLAYER_TURN,
+    PROCESSING_MOVE,
+    GAME_UPDATING,
     GAME_OVER
 }

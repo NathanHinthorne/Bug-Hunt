@@ -16,13 +16,19 @@ public final class AudioManager {
     private static final double VOLUME_MODIFIER = 0.3; // 0.6
 
 
-
     // Separate media players for music and sound effects
     private MediaPlayer musicPlayer;
     private MediaPlayer sfxPlayer;
 
 
-    // BUTTON SOUNDS
+    // MUSIC
+    public Media menuMusic;
+    public Media gameMusic1;
+    public Media gameMusic2;
+    public Media gameMusic3;
+
+
+    // UI SOUNDS
     public Media mouseClick;
     public Media menu1;
     public Media menu2;
@@ -30,14 +36,13 @@ public final class AudioManager {
     public Media onElectronic;
     public Media offElectronic;
     public Media error;
+    public Media fancyClick;
+    public Media win;
+    public Media blip;
+    public Media pop;
 
 
-
-    // MUSIC
-
-
-
-    // HERO
+    // HEDGEHOG
     // (step1, step2, step3, step4 are from Valve's Team Fortress 2)
     public Media step1; // source: Valve's Team Fortress 2
     public Media step2; // source: Valve's Team Fortress 2
@@ -45,6 +50,17 @@ public final class AudioManager {
     public Media step4; // source: Valve's Team Fortress 2
     public Media heroOof;
     public Media collect;
+
+    // BUGS
+    public Media grasshopper;
+    public Media firefly;
+    public Media butterfly;
+    public Media dragonfly;
+    public Media bee;
+    public Media wasp;
+    public Media honeycomb; // drip, drip?
+    public Media flower;
+
 
     // DIALOGUE
     public Media talking;
@@ -58,28 +74,48 @@ public final class AudioManager {
 
     private void preloadMediaFiles() {
 
-        // BUTTONS
-        mouseClick = loadMedia("/audio/sfx/button_click.wav");
-        menu1 = loadMedia("/audio/sfx/button_menu_1.wav");
-        menu2 = loadMedia("/audio/sfx/button_menu_2.wav");
-        menu3 = loadMedia("/audio/sfx/button_menu_3.wav");
-        onElectronic = loadMedia("/audio/sfx/onElectronic.wav");
-        offElectronic = loadMedia("/audio/sfx/offElectronic.wav");
-        error = loadMedia("/audio/sfx/button_error.wav");
+        // MUSIC
+        menuMusic = loadMedia("/audio/music/forest_trail.mp3");
+        gameMusic1 = loadMedia("/audio/music/into_the_woods.mp3");
+        gameMusic2 = loadMedia("/audio/music/natural.mp3");
+        gameMusic3 = loadMedia("/audio/music/nature.mp3");
+
+        // UI
+        mouseClick = loadMedia("/audio/sfx/UI/button_click.wav");
+        menu1 = loadMedia("/audio/sfx/UI/button_menu_1.wav");
+        menu2 = loadMedia("/audio/sfx/UI/button_menu_2.wav");
+        menu3 = loadMedia("/audio/sfx/UI/button_menu_3.wav");
+        onElectronic = loadMedia("/audio/sfx/UI/onElectronic.wav");
+        offElectronic = loadMedia("/audio/sfx/UI/offElectronic.wav");
+        error = loadMedia("/audio/sfx/UI/button_error.wav");
+        fancyClick = loadMedia("/audio/sfx/UI/click_confirm.mp3");
+        win = loadMedia("/audio/sfx/UI/win.mp3");
+        blip = loadMedia("/audio/sfx/UI/dialogue_talking.wav");
+        pop = loadMedia("/audio/sfx/UI/pop.mp3");
 
         // HEDGEHOG
         step1 = loadMedia("/audio/sfx/step1.wav");
         step2 = loadMedia("/audio/sfx/step2.wav");
         step3 = loadMedia("/audio/sfx/step3.wav");
         step4 = loadMedia("/audio/sfx/step4.wav");
-        heroOof = loadMedia("/audio/sfx/oof.wav");
-        collect = loadMedia("/audio/sfx/collect.wav");
+        heroOof = loadMedia("/audio/sfx/funny/oof.wav");
+        collect = loadMedia("/audio/sfx/UI/collect.wav");
+
+        // BUGS
+        grasshopper = loadMedia("/audio/sfx/bugs/grasshopper.wav");
+        firefly = loadMedia("/audio/sfx/bugs/firefly.wav");
+        butterfly = loadMedia("/audio/sfx/bugs/butterfly.wav");
+        dragonfly = loadMedia("/audio/sfx/bugs/dragonfly.wav");
+//        bee = loadMedia("/audio/sfx/bugs/bee.wav");
+//        wasp = loadMedia("/audio/sfx/bugs/wasp.wav");
+//        honeycomb = loadMedia("/audio/sfx/bugs/honeycomb.wav");
+//        flower = loadMedia("/audio/sfx/bugs/flower.wav");
 
         // DIALOGUE
-        talking = loadMedia("/audio/sfx/dialogue_talking.wav");
+        talking = loadMedia("/audio/sfx/UI/dialogue_talking.wav");
 
         // FUNNY
-        bonk = loadMedia("/audio/sfx/bonk.wav");
+        bonk = loadMedia("/audio/sfx/funny/bonk.wav");
 
     }
 

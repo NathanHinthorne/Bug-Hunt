@@ -4,7 +4,7 @@ import com.Butterfly.model.board.Board;
 import com.Butterfly.model.board.BoardObserver;
 import com.Butterfly.model.board.GlobalDir;
 import com.Butterfly.model.cards.Card;
-import javafx.animation.FadeTransition;
+
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.ParallelTransition;
@@ -13,27 +13,20 @@ import javafx.animation.RotateTransition;
 import javafx.animation.ScaleTransition;
 import javafx.animation.SequentialTransition;
 import javafx.animation.Timeline;
-import javafx.geometry.HPos;
 import javafx.geometry.Insets;
-import javafx.geometry.VPos;
 import javafx.scene.Node;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.effect.Glow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.BackgroundImage;
 import javafx.scene.layout.BackgroundPosition;
 import javafx.scene.layout.BackgroundRepeat;
 import javafx.scene.layout.BackgroundSize;
-import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
-import javafx.scene.text.Text;
 import javafx.util.Duration;
 
 import java.util.ArrayList;
@@ -41,7 +34,7 @@ import java.util.ArrayList;
 public class VisualBoard extends GridPane implements BoardObserver, java.io.Serializable {
 
     public static final int CARD_SIZE = 60;
-    public static final int PADDING = 10;
+    public static final int CARD_PADDING = 10;
     public static final double CORNER_RADIUS = 12.0; // Adjust the radius as needed
 
     private final Board board;
@@ -61,11 +54,10 @@ public class VisualBoard extends GridPane implements BoardObserver, java.io.Seri
         board.addObserver(this); // Registering VisualBoard as an observer
 
         this.setPadding(new Insets(10));
-        this.setHgap(PADDING);
-        this.setVgap(PADDING);
-        setBackground(new Background(new BackgroundFill(Color.LIGHTGRAY, CornerRadii.EMPTY, Insets.EMPTY)));
+        this.setHgap(CARD_PADDING);
+        this.setVgap(CARD_PADDING);
 
-        Image backgroundImage = new Image(getClass().getResourceAsStream("/images/scenery/meadow3.jpg"));
+        Image backgroundImage = new Image(getClass().getResourceAsStream("/images/scenery/meadow.jpg"));
         BackgroundImage background = new BackgroundImage(backgroundImage, BackgroundRepeat.NO_REPEAT,
                 BackgroundRepeat.NO_REPEAT, BackgroundPosition.DEFAULT,
                 new BackgroundSize(100, 100, true, true, true, true));
@@ -87,11 +79,16 @@ public class VisualBoard extends GridPane implements BoardObserver, java.io.Seri
         } else {
             enableClicking(false);
             enableKeyPressing(false);
-            board.unhighlightAllCards();
             update();
 
             board.playerMoveCompleted(); // ending statement
         }
+    }
+
+    public void computerAnimations() {
+        update();
+        wobbleHedgehog();
+        glowHedgehog();
     }
 
     private void initializeBoard() {
@@ -117,35 +114,31 @@ public class VisualBoard extends GridPane implements BoardObserver, java.io.Seri
 
         // if this is the first update, don't take the card the hedgehog is on
         if (!board.containsMaxCards()) {
-            leaveEmptyCard();
+            leaveEmptyCard(board.getHedgehog().getX(), board.getHedgehog().getY());
         }
 
-//        leaveEmptyCard();
         clearOldImages();
 
         for (int x = 0; x < board.getWidth(); x++) {
             for (int y = 0; y < board.getHeight(); y++) {
 
                 updateCardOverlay(x, y);
-
-                // if (board.getCard(x, y).isEmpty()) {
-                // ImageView imageView = createCardView(new Image("/images/empty.png"));
-                // this.add(imageView, x, y);
-                // takenCards.add(imageView);
-                //
-                // if (board.hasNet(x, y)) { // move this to initializeBoard()?
-                // displayNet(x, y);
-                // }
-                // }
             }
         }
 
         updateHedgehog();
     }
 
-    private void leaveEmptyCard() {
-        int x = board.getHedgehog().getX();
-        int y = board.getHedgehog().getY();
+    public void leaveAllEmptyCards() {
+        for (int x = 0; x < board.getWidth(); x++) {
+            for (int y = 0; y < board.getHeight(); y++) {
+
+                leaveEmptyCard(x, y);
+            }
+        }
+    }
+
+    private void leaveEmptyCard(int x, int y) {
 
         // find the card the hedgehog is on
         ImageView cardImage = cards[x][y];
@@ -275,7 +268,7 @@ public class VisualBoard extends GridPane implements BoardObserver, java.io.Seri
 
     private void addCardOverlay(int x, int y) {
         Rectangle overlay = new Rectangle(CARD_SIZE, CARD_SIZE, Color.TRANSPARENT); // default color is transparent
-        overlay.setTranslateX(-PADDING / 4); // move overlay a little to the left
+        overlay.setTranslateX(-CARD_PADDING / 4); // move overlay a little to the left
         overlay.setArcWidth(CORNER_RADIUS);
         overlay.setArcHeight(CORNER_RADIUS);
 
@@ -413,47 +406,6 @@ public class VisualBoard extends GridPane implements BoardObserver, java.io.Seri
 
     private void enableKeyPressing(boolean canPressKeys) {
         // TODO: implement
-    }
-
-    public void fadeOut() {
-        // Create a FadeTransition that fades the VisualBoard out over 2 seconds
-        FadeTransition fadeTransition = new FadeTransition(Duration.seconds(2), this);
-        fadeTransition.setFromValue(1.0);
-        fadeTransition.setToValue(0.0);
-
-        // Set an action to be performed when the fade transition is finished
-        fadeTransition.setOnFinished(event -> displayGameOver());
-
-        // Start the fade transition
-        fadeTransition.play();
-    }
-
-    private void displayGameOver() {
-        // // Create a Label to display "Game Over"
-        // Label gameOverLabel = new Label("Game Over");
-        // Font funFont =
-        // Font.loadFont(getClass().getResourceAsStream("/fonts/storytime/Storytime.ttf"),
-        // 50);
-        // gameOverLabel.setFont(funFont);
-        // gameOverLabel.setTextFill(Color.RED);
-
-        // // Create a new StackPane to hold the Game Over label
-        // StackPane overlay = new StackPane(gameOverLabel);
-        // // Bind the size of the overlay StackPane to the size of the VisualBoard
-        // overlay.prefWidthProperty().bind(this.widthProperty());
-        // overlay.prefHeightProperty().bind(this.heightProperty());
-
-        // // Add the overlay StackPane to the parent of the VisualBoard
-        // ((Pane) this.getParent()).getChildren().add(overlay);
-
-        // // Create a FadeTransition that fades the Label in over 2 seconds
-        // FadeTransition fadeInTransition = new FadeTransition(Duration.seconds(2),
-        // gameOverLabel);
-        // fadeInTransition.setFromValue(0.0);
-        // fadeInTransition.setToValue(1.0);
-
-        // // Start the fade in transition
-        // fadeInTransition.play();
     }
 
 }

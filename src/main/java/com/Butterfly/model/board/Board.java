@@ -198,27 +198,74 @@ public class Board implements java.io.Serializable {
     }
 
     private void placeStartingCards() {
+        // for (int y = 0; y < gridHeight; y++) {
+        // for (int x = 0; x < gridWidth; x++) {
+        //
+        // Card card = drawPile.remove(0);
+        // placeCard(card, x, y);
+        // // System.out.println("Placing card " + card.toString() + " at (" + x + ", "
+        // + y
+        // // + ")");
+        //
+        // if (RANDOM.nextDouble() < NET_CHANCE) { // chance of adding net to square
+        // getCard(x, y).placeNet();
+        // }
+        // }
+        // }
+
+        // Calculate the number of nets to be placed
+        int numNets = (players.size() * 2) + 2;
+        int totalCells = gridWidth * gridHeight;
+
+        // Create an array of booleans representing whether each cell has a net
+        boolean[] nets = new boolean[totalCells];
+        Arrays.fill(nets, false);
+
+        // Place the nets while ensuring they are spaced out
+        for (int i = 0; i < numNets; i++) {
+            int x, y;
+            do {
+                x = RANDOM.nextInt(gridWidth);
+                y = RANDOM.nextInt(gridHeight);
+            } while (nets[y * gridWidth + x] || !isSafeToPlaceNet(nets, x, y));
+
+            nets[y * gridWidth + x] = true;
+        }
+
+        // Place the cards and nets on the grid
         for (int y = 0; y < gridHeight; y++) {
             for (int x = 0; x < gridWidth; x++) {
-
-                Card card = drawPile.remove(0); // ? need to randomize drawPile first?
+                Card card = drawPile.remove(0);
                 placeCard(card, x, y);
-                // System.out.println("Placing card " + card.toString() + " at (" + x + ", " + y
-                // + ")");
 
-                if (RANDOM.nextDouble() < NET_CHANCE) { // chance of adding net to square
+                if (nets[y * gridWidth + x]) {
                     getCard(x, y).placeNet();
                 }
             }
         }
     }
 
+    private boolean isSafeToPlaceNet(boolean[] nets, int x, int y) {
+        // Return false if the cell is a corner cell
+        if ((x == 0 || x == gridWidth - 1) && (y == 0 || y == gridHeight - 1)) {
+            return false;
+        }
+
+        for (int dy = -1; dy <= 1; dy++) {
+            for (int dx = -1; dx <= 1; dx++) {
+                int nx = x + dx, ny = y + dy;
+                if (nx >= 0 && nx < gridWidth && ny >= 0 && ny < gridHeight && nets[ny * gridWidth + nx]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
     public void move(int x, int y) {
         if (cannotMove()) {
             throw new IllegalStateException("Hedgehog cannot move but you're trying to call move()");
         }
-
-        App.gameState = GameState.PROCESSING_PLAYER_MOVE;
 
         hedgehog.setOldLocation(hedgehog.getX(), hedgehog.getY());
         hedgehog.setLocation(x, y);
@@ -232,7 +279,7 @@ public class Board implements java.io.Serializable {
         // check if hedgehog passed over net
         List<Card> cardsPassedOver = getCardsPassedOver(hedgehog.getOldX(), hedgehog.getOldY(), x, y);
         for (Card card : cardsPassedOver) {
-//            System.out.println("Passed over " + card.getFamily() + " " + card.getType());
+            // System.out.println("Passed over " + card.getFamily() + " " + card.getType());
             if (card.hasRevealedNet()) {
                 passedOverNet = true;
                 System.out.println("Passed over net!");
@@ -456,6 +503,7 @@ public class Board implements java.io.Serializable {
 
     public void placeCard(Card card, int x, int y) {
         grid[x][y] = card;
+        card.setCoordinates(x, y);
         numCardsInPlay++;
     }
 

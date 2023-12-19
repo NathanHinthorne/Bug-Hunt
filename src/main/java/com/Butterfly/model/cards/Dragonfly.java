@@ -12,7 +12,6 @@ public class Dragonfly extends Card {
         myImagePath = findImagePath();
     }
 
-
     @Override
     public String toString() {
         return "DD";
@@ -41,6 +40,5 @@ public class Dragonfly extends Card {
 
         myPoints = points;
     }
-
 
 }

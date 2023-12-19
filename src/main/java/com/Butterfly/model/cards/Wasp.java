@@ -1,7 +1,6 @@
 package com.Butterfly.model.cards;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 public class Wasp extends Card {
@@ -12,10 +11,10 @@ public class Wasp extends Card {
         myImagePath = findImagePath();
     }
 
-//    @Override
-//    public String findImagePath() {
-//        return "/images/error.png";
-//    }
+    // @Override
+    // public String findImagePath() {
+    // return "/images/error.png";
+    // }
 
     @Override
     public String toString() {

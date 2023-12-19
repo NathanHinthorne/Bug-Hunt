@@ -3,10 +3,11 @@ package com.Butterfly.view.GameScreen;
 import com.Butterfly.model.board.Board;
 
 import javafx.animation.FadeTransition;
-import javafx.animation.PauseTransition;
+import javafx.animation.SequentialTransition;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.CacheHint;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
@@ -18,7 +19,7 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
@@ -33,15 +34,19 @@ import java.io.ObjectOutputStream;
 public class GameScreen {
     private final Stage primaryStage;
     private final Board board;
+    private static BorderPane root;
+    private static VBox everything;
+    private static InfoBanner infoBanner;
     private static VisualBoard visualBoard;
-    private static CollectionList collectionList;
-    // private static GameInfo gameInfo;
+    private static CurrentCollection currentCollection;
+    private static Scene scene;
     private Text turnMessage;
 
     public GameScreen(final Stage primaryStage, final Board board, final boolean debugMode) {
         this.primaryStage = primaryStage;
         this.board = board;
 
+        // setupTurnMessage();
         setupIcon();
         setupGameScene();
 
@@ -58,7 +63,6 @@ public class GameScreen {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
             alert.setTitle("Confirmation");
             alert.setHeaderText("Are you sure you want to quit?");
-            alert.setContentText("Any unsaved progress will be lost.");
 
             // Show the confirmation dialog
             alert.showAndWait().ifPresent(response -> {
@@ -71,42 +75,37 @@ public class GameScreen {
     }
 
     private void setupIcon() {
-        // Load the icon image
-        Image iconImage = loadImage("/images/icon.jpg");
-
-        // Set the icon for the stage
-        primaryStage.getIcons().add(iconImage);
+        // Set icon
+        InputStream stream = getClass().getResourceAsStream("/images/icon.jpg");
+        Image icon = new Image(stream);
+        primaryStage.getIcons().add(icon);
     }
 
-
     private void setupGameScene() {
-        BorderPane root = new BorderPane();
-
-        setupTurnMessage(root);
-        setupToolbar(root);
+        root = new BorderPane();
 
         // the main content
-        BorderPane content = new BorderPane();
+        HBox mainContent = new HBox(10);
         visualBoard = new VisualBoard(board);
-        collectionList = new CollectionList(board);
-        // gameInfo = new GameInfo(board);
+        currentCollection = new CurrentCollection(board);
+        currentCollection.setPrefWidth(400);
+        mainContent.getChildren().addAll(currentCollection, visualBoard);
 
-        // gameInfo.setPrefWidth(200);
-        collectionList.setPrefWidth(400);
-
-        content.setCenter(visualBoard);
-        // content.setRight(gameInfo);
-        content.setLeft(collectionList);
-
-        // Set the same margin for each child of the BorderPane
+        // Set the same margin for each child of the HBox
         Insets margin = new Insets(10);
-        BorderPane.setMargin(visualBoard, margin);
-        BorderPane.setMargin(collectionList, margin);
-        // BorderPane.setMargin(gameInfo, margin);
+        HBox.setMargin(currentCollection, margin);
+        HBox.setMargin(visualBoard, margin);
+
+        // the info banner
+        infoBanner = new InfoBanner();
+
+        everything = new VBox(10);
+        everything.getChildren().addAll(infoBanner, mainContent);
 
         // put padding between the content and the window
-        // BorderPane.setMargin(content, margin);
-        root.setCenter(content); // put the main content in the center of the root
+        root.setCenter(everything);
+
+        setupToolbar(root);
 
         Scene scene = new Scene(root);
 
@@ -115,11 +114,6 @@ public class GameScreen {
         primaryStage.setTitle("Butterfly Game");
         primaryStage.setResizable(false);
         primaryStage.show();
-
-        // Set icon
-        InputStream stream = getClass().getResourceAsStream("/images/icon.jpg");
-        Image icon = new Image(stream);
-        primaryStage.getIcons().add(icon);
     }
 
     private void setupToolbar(BorderPane root) {
@@ -144,7 +138,7 @@ public class GameScreen {
         Menu helpMenu = new Menu("Help");
 
         // Create the Help button
-        MenuItem helpItem = new MenuItem("Help");
+        MenuItem helpItem = new MenuItem("Instructions");
         helpItem.setOnAction(event -> showHelpScene());
 
         // Add the Help button to the Help menu
@@ -177,7 +171,7 @@ public class GameScreen {
         }
     }
 
-    private void setupTurnMessage(BorderPane root) {
+    private void setupTurnMessage() {
         turnMessage = new Text();
         turnMessage.setFont(Font.loadFont(getClass().getResourceAsStream("/fonts/storytime/Storytime.ttf"), 50));
         turnMessage.setFill(Color.BLACK);
@@ -189,22 +183,25 @@ public class GameScreen {
         // Create a new Stage
         Stage helpStage = new Stage();
         // Create the root node
-        BorderPane root = new BorderPane();
+        BorderPane helpRoot = new BorderPane();
         // Create the Help text
         Label helpText = new Label("Help");
         helpText.setFont(Font.loadFont(getClass().getResourceAsStream("/fonts/storytime/Storytime.ttf"), 50));
         helpText.setTextFill(Color.BLACK);
         // Add the Help text to the root and center it
-        root.setTop(helpText);
+        helpRoot.setTop(helpText);
         BorderPane.setAlignment(helpText, Pos.CENTER);
 
         // Create the instructions text
-        Label instructionsText = new Label("Instructions:\n\n"
+        Label instructionsTitle = new Label("Instructions");
+        instructionsTitle.setFont(Font.loadFont(getClass().getResourceAsStream("/fonts/storytime/Storytime.ttf"), 30));
+        Label instructionsText = new Label(""
                 + "1. Each player takes turns moving the hedgehog\n"
                 + "2. Move the hedgehog on the card you want to collect\n"
                 + "3. The hedgehog can only move FORWARD, LEFT, or RIGHT\n"
-                + "4. Each card has abilities (Check the cheat sheet below!) \n"
-                + "5. The player with the highest score wins\n\n");
+                + "4. Passing a net will earn you a random bonus card \n"
+                + "5. Each card has abilities (Check the cheat sheet below!)\n"
+                + "6. The player with the highest score wins\n\n");
         instructionsText.setFont(Font.loadFont(getClass().getResourceAsStream("/fonts/storytime/Storytime.ttf"), 20));
         instructionsText.setTextFill(Color.BLACK);
 
@@ -217,12 +214,17 @@ public class GameScreen {
         // Load the cheat sheet image
         Image cheatsheet = loadImage("/images/cheatsheet.png");
         ImageView cheatsheetView = new ImageView(cheatsheet);
-        cheatsheetView.preserveRatioProperty().set(true);
-        cheatsheetView.setFitWidth(400);
+        cheatsheetView.setSmooth(true);
+        cheatsheetView.setCache(true);
+        cheatsheetView.setCacheHint(CacheHint.QUALITY);
+        cheatsheetView.setPreserveRatio(true);
+        cheatsheetView.setFitWidth(600);
 
         // Create a VBox to hold the instructions and cheat sheet
-        VBox vbox = new VBox(10, instructionsText, cheatSheetTitle, cheatsheetView); // 10 is the spacing between
-                                                                                     // elements
+        VBox vbox = new VBox(10, instructionsTitle, instructionsText, cheatSheetTitle, cheatsheetView); // 10 is the
+                                                                                                        // spacing
+                                                                                                        // between
+        // elements
         vbox.setPadding(new Insets(10)); // Add some padding around the VBox
 
         // Create a ScrollPane and add the VBox to it
@@ -230,13 +232,13 @@ public class GameScreen {
         scrollPane.setFitToWidth(true); // This will make the VBox fill the width of the ScrollPane
 
         // Add the ScrollPane to the root
-        root.setCenter(scrollPane);
+        helpRoot.setCenter(scrollPane);
 
         // Create a Scene and set it to the stage
-        Scene scene = new Scene(root);
+        Scene scene = new Scene(helpRoot);
         // Set the size of the stage
-        helpStage.setWidth(450);
-        helpStage.setHeight(450);
+        helpStage.setWidth(650);
+        helpStage.setHeight(500);
         // set icon
         InputStream stream = getClass().getResourceAsStream("/images/icon.jpg");
         Image icon = new Image(stream);
@@ -252,27 +254,24 @@ public class GameScreen {
         return new Image(getClass().getResource(path).toExternalForm());
     }
 
-    // public void setupFinalScoresScene() {
-    // // delete game scenes
-    // primaryStage.hide();
-
-    // BorderPane root = new BorderPane();
-
-    // // the main content
-    // FinalScores finalScores = new FinalScores(board);
-    // root.setCenter(finalScores);
-
-    // // set the scene
-    // Scene scene = new Scene(root);
-    // primaryStage.setScene(scene);
-    // primaryStage.setTitle("Final Scores");
-    // primaryStage.setResizable(true);
-    // primaryStage.show();
-    // }
-
     public void ending() {
-        // Fade out the VisualBoard
-        visualBoard.fadeOut();
+        // Create a new BorderPane to hold the Game Over label and the FinalScores
+        VBox endingPane = new VBox();
+        endingPane.prefWidthProperty().bind(root.widthProperty());
+        endingPane.prefHeightProperty().bind(root.heightProperty());
+
+        // Fade out everything except the toolbar
+        FadeTransition fadeOutTransition = new FadeTransition(Duration.seconds(2), everything);
+        fadeOutTransition.setFromValue(1.0);
+        fadeOutTransition.setToValue(0.0);
+
+        // Remove everything except the toolbar after the fade out transition
+        fadeOutTransition.setOnFinished(event -> {
+            root.getChildren().remove(everything);
+
+            // Add the endingPane to the root
+            root.setCenter(endingPane);
+        });
 
         // Create a Label to display "Game Over"
         Label gameOverLabel = new Label("Game Over");
@@ -280,42 +279,55 @@ public class GameScreen {
         gameOverLabel.setFont(funFont);
         gameOverLabel.setTextFill(Color.RED);
 
-        // Create a new StackPane to hold the Game Over label
-        StackPane overlay = new StackPane(gameOverLabel);
-        // Bind the size of the overlay StackPane to the size of the GameScreen
-        overlay.prefWidthProperty().bind(visualBoard.widthProperty());
-        overlay.prefHeightProperty().bind(visualBoard.heightProperty());
+        // Create an HBox to hold the FinalScores and align it to the left
+        HBox gameOverBox = new HBox(gameOverLabel);
+        gameOverBox.setAlignment(Pos.CENTER);
+        endingPane.getChildren().add(gameOverBox);
 
-        // Add the overlay StackPane to the GameScreen
-        visualBoard.getChildren().add(overlay);
+        // put spacing on the bottom
+        endingPane.setPadding(new Insets(0, 0, 50, 0));
 
         // Create a FadeTransition that fades the Label in over 2 seconds
         FadeTransition fadeInTransition = new FadeTransition(Duration.seconds(2), gameOverLabel);
         fadeInTransition.setFromValue(0.0);
         fadeInTransition.setToValue(1.0);
 
-        // Start the fade in transition
-        fadeInTransition.play();
-    }
+        // Add a callback to the FadeTransition that displays the final scores after the
+        // "Game Over" label has faded in
+        fadeInTransition.setOnFinished(event -> {
+            // Create an instance of FinalScores
+            FinalScores finalScores = new FinalScores(board);
+            finalScores.setOpacity(0); // Start invisible for the fade-in transition
 
-    public void displayPlayerTurn(String message) {
-        turnMessage.setText(message);
-        turnMessage.setVisible(true);
+            // Create an HBox to hold the FinalScores and align it to the left
+            HBox scoresBox = new HBox(finalScores);
+            scoresBox.setAlignment(Pos.CENTER_LEFT);
 
-        PauseTransition pause = new PauseTransition(Duration.seconds(3));
-        pause.setOnFinished(event -> {
-            turnMessage.setVisible(false);
+            // Add the HBox to the endingPane
+            endingPane.getChildren().add(scoresBox);
+
+            // Create a FadeTransition that fades the FinalScores in over 2 seconds
+            FadeTransition fadeInScoresTransition = new FadeTransition(Duration.seconds(2), finalScores);
+            fadeInScoresTransition.setFromValue(0.0);
+            fadeInScoresTransition.setToValue(1.0);
+            fadeInScoresTransition.setOnFinished(e -> finalScores.popInCards());
+            fadeInScoresTransition.play();
         });
-        pause.play();
+
+        // create a sequence of animations
+        SequentialTransition endingTransition = new SequentialTransition(fadeOutTransition, fadeInTransition);
+        endingTransition.play();
     }
 
     public VisualBoard getVisualBoard() {
         return visualBoard;
     }
 
-    public CollectionList getCollectionList() {
-        return collectionList;
+    public CurrentCollection getCollectionList() {
+        return currentCollection;
     }
 
-
+    public InfoBanner getInfoBanner() {
+        return infoBanner;
+    }
 }

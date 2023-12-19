@@ -2,28 +2,24 @@ package com.Butterfly.controller;
 
 import com.Butterfly.model.board.Board;
 import com.Butterfly.model.cards.Card;
+import com.Butterfly.model.cards.CardFamily;
 import com.Butterfly.model.players.Player;
 import com.Butterfly.view.AudioManager;
-import com.Butterfly.view.GameScreen.GameInfo;
 import com.Butterfly.view.GameScreen.GameScreen;
-import com.Butterfly.view.GameScreen.CollectionList;
-import com.Butterfly.view.GameScreen.VisualBoard;
 import com.Butterfly.view.IntroScreen.IntroScreen;
 import com.Butterfly.view.TitleScreen.TitleScreen;
+
+import javafx.animation.PauseTransition;
 import javafx.application.Application;
-import javafx.scene.Scene;
 import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
-import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
-import javafx.scene.layout.*;
-import javafx.geometry.Insets;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.Optional;
@@ -32,7 +28,7 @@ import java.util.Scanner;
 public class App extends Application implements java.io.Serializable {
 
     // settings
-    public static final boolean DEBUG_MODE = true;
+    public static final boolean DEBUG_MODE = false;
 
     // game data
     public static GameState gameState;
@@ -67,7 +63,7 @@ public class App extends Application implements java.io.Serializable {
             titleScreen = new TitleScreen(primaryStage);
             // titleScreen.setStartButtonListener(event -> checkForSavedGame(primaryStage));
             titleScreen.setStartButtonListener(event -> {
-                audio.playSFX(audio.mouseClick, 0.5);
+                audio.playSFX(audio.fancyClick, 0.3);
                 showIntroScreen(primaryStage);
             });
         }
@@ -106,7 +102,7 @@ public class App extends Application implements java.io.Serializable {
         Stage introStage = new Stage();
         introScreen = new IntroScreen(introStage, DEBUG_MODE);
         introScreen.setNextButtonListener(event -> {
-            audio.playSFX(audio.mouseClick, 0.5);
+            audio.playSFX(audio.fancyClick, 0.3);
             showGameScreen(introStage, introScreen);
         });
         // check if enter key is pressed
@@ -141,60 +137,32 @@ public class App extends Application implements java.io.Serializable {
     }
 
     private void startGame(Stage gameStage) {
-        startNextPlayerTurn();
+        board.unhighlightAllCards();
+        gameScreen.getVisualBoard().update();
+        gameScreen.getCollectionList().getFinishTurnButton().setVisible(false);
+        audio.playMusic(audio.gameMusic2, true, 0.8);
+
+        if (DEBUG_MODE) {
+            startNextPlayerTurn();
+
+        } else {
+            gameScreen.getInfoBanner().displayInfo("Welcome to the game of BUTTERFLY!", Color.CORNFLOWERBLUE, 4);
+
+            PauseTransition pause = new PauseTransition(Duration.seconds(4));
+            pause.setOnFinished(event -> {
+                gameScreen.getInfoBanner().displayInfo("Check out the instructions located in \"Help\" to get started",
+                        Color.CORNFLOWERBLUE, 6);
+
+                PauseTransition pause2 = new PauseTransition(Duration.seconds(6));
+                pause2.setOnFinished(event2 -> {
+                    audio.playSFX(audio.win, 0.9);
+                    startNextPlayerTurn();
+                });
+                pause2.play();
+            });
+            pause.play();
+        }
     }
-
-    private void windowSetup(Stage primaryStage) {
-        BorderPane root = new BorderPane();
-
-        // the main content
-        BorderPane content = new BorderPane();
-        GridPane visualBoard = new VisualBoard(board);
-        Pane playerCollections = new CollectionList(board);
-        Pane gameInfo = new GameInfo(board);
-
-        playerCollections.setPrefWidth(350);
-        gameInfo.setPrefWidth(200);
-
-        BorderPane.setMargin(playerCollections, new Insets(0, 10, 0, 0)); // 10 pixels padding on the right
-        BorderPane.setMargin(gameInfo, new Insets(0, 0, 0, 10)); // 10 pixels padding on the left
-
-        content.setCenter(visualBoard);
-        content.setRight(gameInfo);
-        content.setLeft(playerCollections);
-
-        // put padding between the content and the window
-        BorderPane.setMargin(content, new Insets(10));
-        root.setCenter(content); // put the main content in the center of the root
-
-        // Create a Scene and set it to the stage
-        Scene scene = new Scene(root);
-
-        // Set the scene in the stage and show the stage
-        primaryStage.setScene(scene);
-        primaryStage.setTitle("Butterfly Game");
-        primaryStage.setResizable(false);
-        primaryStage.show();
-
-        // Set icon
-        InputStream stream = getClass().getResourceAsStream("/images/icon.jpg");
-        Image icon = new Image(stream);
-        primaryStage.getIcons().add(icon);
-    }
-
-    // private static void gameLoop() {
-    // while (gameState != GameState.GAME_OVER) {
-
-    // // loop through players' turns
-    // for (Player currentPlayer : board.getPlayers()) {
-
-    // playerTurn(currentPlayer);
-    // }
-    // }
-
-    // roundCount++;
-    // System.out.println("Round " + roundCount + " is over!");
-    // }
 
     private static void startNextPlayerTurn() {
         Player currentPlayer = board.getCurrentPlayer();
@@ -215,13 +183,13 @@ public class App extends Application implements java.io.Serializable {
     }
 
     private static void playerTurn(Player player) {
+        gameState = GameState.PLAYER_TURN;
 
         gameScreen.getCollectionList().getFinishTurnButton().setVisible(false);
         board.setCurrentPlayer(player);
-        gameState = GameState.WAITING_FOR_PLAYER_MOVE;
         System.out.println("Waiting for player move...");
 
-        gameScreen.displayPlayerTurn(player.getName() + "'s turn!");
+        gameScreen.getInfoBanner().displayInfo(player.getName() + "'s turn!", Color.BLACK, 2);
         System.out.println(player.getName() + "'s turn!");
 
         board.highlightCards();
@@ -230,38 +198,28 @@ public class App extends Application implements java.io.Serializable {
             gameState = GameState.GAME_OVER;
             return;
         }
+
+        if (player.isHuman()) {
+            humanTurnProcess(player);
+        } else {
+            computerTurnProcess(player);
+        }
+    }
+
+    private static void humanTurnProcess(Player player) {
+        gameState = GameState.PROCESSING_MOVE;
         board.setReadyToMove(true);
 
         board.setMoveCallback(() -> {
+            gameState = GameState.GAME_UPDATING;
 
+            board.unhighlightAllCards();
             gameScreen.getVisualBoard().update();
 
             audio.playSFX(audio.step1, 0.5);
 
-            // take card from board
-            Card card = board.takeCard(board.getHedgehog().getX(), board.getHedgehog().getY());
-
-            // move card into player's collection
-            player.collectCard(card);
-            System.out.println("\nCollected a " + card.getFamily() + " card.");
-            System.out.println();
-            // Delay.pause(1).join(); // freezes screen, not sure why
-
-            audio.playSFX(audio.collect, 0.8); // TODO play sfx based on card family (i.e. butterfly wing flapping,
-            // grasshopper boing, etc.)
-
-            gameScreen.getCollectionList().update();
-
-            if (board.playerPassedOverNet()) {
-                System.out.println("Passed over a net!");
-                Card drawnCard = board.drawCard();
-                player.collectCard(drawnCard);
-                System.out.println("You pulled a " + drawnCard.getFamily() + " card from the net.\n");
-                audio.playSFX(audio.collect, 0.8);
-                gameScreen.getCollectionList().update();
-            }
-
-            gameScreen.getVisualBoard().update();
+            takeCardFromBoard(player);
+            checkForNet(player);
 
             gameScreen.getCollectionList().getFinishTurnButton().setVisible(true);
 
@@ -269,22 +227,107 @@ public class App extends Application implements java.io.Serializable {
 
             // wait for player to click finish turn button
             gameScreen.getCollectionList().setFinishTurnButtonListener(event -> {
-                audio.playSFX(audio.mouseClick, 0.5);
-                gameScreen.getCollectionList().nextPlayerCollection();
-                board.nextPlayer();
-                startNextPlayerTurn();
-                gameState = GameState.FINISHED_PLAYER_MOVE;
-                System.out.println("Player move finished!");
+                audio.playSFX(audio.fancyClick, 0.3);
+                endTurn();
             });
         });
 
         checkForKeyPress(player);
     }
 
+    private static void computerTurnProcess(Player player) {
+        gameState = GameState.PROCESSING_MOVE;
+        gameScreen.getVisualBoard().computerAnimations();
+
+        // If the player is a computer player, automatically move to a card
+        Card cardToMoveTo = player.cardToMoveTo(); // computer player chooses a card to move to (randomly or highest
+                                                   // value?)
+        board.move(cardToMoveTo.getCoordinates().getX(), cardToMoveTo.getCoordinates().getY());
+
+        // wait two seconds, display "thinking", wait two more seconds, then move
+        PauseTransition pause = new PauseTransition(Duration.seconds(2));
+        pause.setOnFinished(event -> {
+            gameScreen.getInfoBanner().displayInfo(player.getName() + " is thinking...", Color.CORNFLOWERBLUE, 4);
+            PauseTransition pause2 = new PauseTransition(Duration.seconds(2));
+            pause2.setOnFinished(event2 -> {
+                gameState = GameState.GAME_UPDATING;
+                audio.playSFX(audio.step1, 0.5);
+                board.unhighlightAllCards();
+                gameScreen.getVisualBoard().update();
+                takeCardFromBoard(player);
+                checkForNet(player);
+                PauseTransition pause3 = new PauseTransition(Duration.seconds(2));
+                pause3.setOnFinished(event3 -> {
+                    endTurn();
+                });
+                pause3.play();
+            });
+            pause2.play();
+        });
+        pause.play();
+    }
+
+    private static void takeCardFromBoard(Player player) {
+        // take card from board
+        Card card = board.takeCard(board.getHedgehog().getX(), board.getHedgehog().getY());
+        player.collectCard(card);
+        audio.playSFX(audio.collect, 0.8);
+        // playBugSound(card.getFamily());
+
+        gameScreen.getCollectionList().update();
+        gameScreen.getVisualBoard().update();
+    }
+
+    private static void checkForNet(Player player) {
+        if (board.playerPassedOverNet()) {
+            System.out.println("Passed over a net!");
+            Card drawnCard = board.drawCard();
+            board.getCurrentPlayer().collectCard(drawnCard);
+            System.out.println(player.getName() + " pulled a " + drawnCard.getFamily() + " card from the net.\n");
+            gameScreen.getInfoBanner().displayInfo("You pulled a " + drawnCard.getFamily() + " card from the net!",
+                    Color.GREEN, 3);
+            audio.playSFX(audio.collect, 0.8);
+            gameScreen.getCollectionList().update();
+        }
+    }
+
+    private static void endTurn() {
+        gameScreen.getCollectionList().nextPlayerCollection();
+        board.nextPlayer();
+        startNextPlayerTurn();
+        System.out.println("Player move finished!");
+    }
+
+    private static void playBugSound(CardFamily family) {
+        if (family == CardFamily.RED_BUTTERFLY || family == CardFamily.BLUE_BUTTERFLY
+                || family == CardFamily.YELLOW_BUTTERFLY || family == CardFamily.GREEN_BUTTERFLY) {
+            audio.playSFX(audio.butterfly, 0.9);
+        } else if (family == CardFamily.DRAGONFLY) {
+            audio.playSFX(audio.dragonfly, 0.9);
+        } else if (family == CardFamily.FIREFLY) {
+            audio.playSFX(audio.firefly, 0.9);
+        } else if (family == CardFamily.GRASSHOPPER) {
+            audio.playSFX(audio.grasshopper, 0.9);
+        }
+        // else if (family == CardFamily.BEE) {
+        // audio.playSFX(audio.bee, 0.5);
+        // } else if (family == CardFamily.WASP) {
+        // audio.playSFX(audio.wasp, 0.5);
+        // } else if (family == CardFamily.HONEYCOMB) {
+        // audio.playSFX(audio.honeycomb, 0.5);
+        // } else if (family == CardFamily.FLOWER) {
+        // audio.playSFX(audio.flower, 0.5);
+        // }
+
+        else {
+            System.out.println("Error: invalid card family");
+        }
+    }
+
     private static void checkForKeyPress(Player currentPlayer) {
-        gameScreen.getVisualBoard().requestFocus();
         board.setKeyCallback((key) -> {
             System.out.println("Key pressed: " + key.toString());
+            audio.playSFX(audio.blip, 0.5);
             handleKeyPress(key);
             playerTurn(currentPlayer);
         });
@@ -294,10 +337,18 @@ public class App extends Application implements java.io.Serializable {
         switch (key) {
             case ESCAPE:
                 ending();
+                break;
+            case R:
+                gameScreen.getVisualBoard().leaveAllEmptyCards();
+                gameScreen.getVisualBoard().update();
+                break;
         }
     }
 
     private static void ending() {
+
+        audio.stopMusic();
+        audio.playSFX(audio.win, 0.8);
 
         System.out.println("\n████ GAME HAS ENDED ████ \n");
 

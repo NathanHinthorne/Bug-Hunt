@@ -1,13 +1,13 @@
 package com.Butterfly.model.cards;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 public class Bee extends Card {
 
     private boolean isPaired;
     public final int PAIRED_VALUE = 0;
+
     public Bee(CardFamily theFamily, CardType theType) {
         myFamily = theFamily;
         myType = theType;
@@ -16,10 +16,10 @@ public class Bee extends Card {
         myImagePath = findImagePath();
     }
 
-//    @Override
-//    public String findImagePath() {
-//        return "/images/error.png";
-//    }
+    // @Override
+    // public String findImagePath() {
+    // return "/images/error.png";
+    // }
 
     @Override
     public String toString() {
@@ -30,7 +30,8 @@ public class Bee extends Card {
     public void calculatePoints(Map<CardFamily, ArrayList<Card>> playerCollection) {
         int points = 0;
 
-        // search for an unpaired honeycomb within the collection, then pair it. Bee = 0 points
+        // search for an unpaired honeycomb within the collection, then pair it. Bee = 0
+        // points
         // Otherwise, leave this bee unpaired. Bee = -3 points
 
         if (isPaired) {
@@ -46,7 +47,8 @@ public class Bee extends Card {
                     honeycomb.pair();
                     this.pair();
                     points = PAIRED_VALUE;
-                    // should we update the honeycomb's points here too? if we don't, the honeycomb's getPoints() method
+                    // should we update the honeycomb's points here too? if we don't, the
+                    // honeycomb's getPoints() method
                     // will need to be called again at some point
                     break;
                 }

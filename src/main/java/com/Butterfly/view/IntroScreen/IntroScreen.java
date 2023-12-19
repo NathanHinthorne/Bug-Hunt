@@ -39,6 +39,7 @@ public class IntroScreen extends Parent {
     private CheckBox checkBox1;
     private ArrayList<TextField> playerNames;
     private final boolean DEBUG_MODE;
+    private int maxComputerPlayers;
 
     public IntroScreen(final Stage introStage, boolean DEBUG_MODE) {
         this.introStage = introStage;
@@ -266,24 +267,42 @@ public class IntroScreen extends Parent {
         Label label = new Label("Number of Human Players");
         humanPlayerSlider = new Slider(1, 5, 2);
         humanPlayerSlider.setShowTickLabels(true);
-        humanPlayerSlider.setShowTickMarks(true);
-        humanPlayerSlider.setMajorTickUnit(1); // Set tick interval to 1
+        humanPlayerSlider.setShowTickMarks(false);
+        humanPlayerSlider.setMajorTickUnit(1);
         humanPlayerSlider.setBlockIncrement(1);
-        humanPlayerSlider.setSnapToTicks(true);
+
+        // make the slider snap near whole number as user slides
+        humanPlayerSlider.valueProperty().addListener((observable, oldValue, newValue) -> {
+            humanPlayerSlider.setValue(Math.round(newValue.doubleValue()));
+        });
+
         section1.getChildren().addAll(label, humanPlayerSlider);
+        humanPlayerSlider.valueProperty().addListener((observable, oldValue, newValue) -> {
+            // Adjust the maximum value of the comPlayerSlider
+            comPlayerSlider.setMax(5 - newValue.intValue());
+        });
         return section1;
     }
 
     private VBox createSection2() {
         VBox section2 = new VBox(10);
         Label label = new Label("Number of Computer Players");
-        comPlayerSlider = new Slider(0, 4, 0);
+        comPlayerSlider = new Slider(0, 3, 0);
         comPlayerSlider.setShowTickLabels(true);
-        comPlayerSlider.setShowTickMarks(true);
-        comPlayerSlider.setMajorTickUnit(1); // Set tick interval to 1
+        comPlayerSlider.setShowTickMarks(false);
+        comPlayerSlider.setMajorTickUnit(1);
         comPlayerSlider.setBlockIncrement(1);
-        comPlayerSlider.setSnapToTicks(true);
+
+        // make the slider snap near whole number as user slides
+        comPlayerSlider.valueProperty().addListener((observable, oldValue, newValue) -> {
+            comPlayerSlider.setValue(Math.round(newValue.doubleValue()));
+        });
+
         section2.getChildren().addAll(label, comPlayerSlider);
+        comPlayerSlider.valueProperty().addListener((observable, oldValue, newValue) -> {
+            // Adjust the maximum value of the humanPlayerSlider
+            humanPlayerSlider.setMax(5 - newValue.intValue());
+        });
         return section2;
     }
 
@@ -303,11 +322,13 @@ public class IntroScreen extends Parent {
                 playerName.setText("Player " + (i + 1));
             }
         }
+        section3.getChildren().add(startButton);
 
         // Add listener to the slider
         humanPlayerSlider.valueProperty().addListener((observable, oldValue, newValue) -> {
             // Remove old text boxes
             section3.getChildren().removeAll(playerNames);
+            section3.getChildren().remove(startButton);
             playerNames.clear();
 
             // Add new text boxes
@@ -317,9 +338,8 @@ public class IntroScreen extends Parent {
                 playerNames.add(playerName);
                 section3.getChildren().add(playerName);
             }
+            section3.getChildren().add(startButton);
         });
-
-        section3.getChildren().add(startButton);
 
         return section3;
     }

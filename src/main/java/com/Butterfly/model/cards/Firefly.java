@@ -12,10 +12,10 @@ public class Firefly extends Card {
         myImagePath = findImagePath();
     }
 
-//    @Override
-//    public String findImagePath() {
-//        return "/images/error.png";
-//    }
+    // @Override
+    // public String findImagePath() {
+    // return "/images/error.png";
+    // }
 
     @Override
     public String toString() {

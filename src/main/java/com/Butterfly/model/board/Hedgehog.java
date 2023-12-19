@@ -87,7 +87,7 @@ public class Hedgehog implements java.io.Serializable {
 
     public Image getImage() {
 
-        InputStream stream = getClass().getResourceAsStream("/images/hedgehog.png");
+        InputStream stream = getClass().getResourceAsStream("/images/Hedgehog.png");
 
         if (stream == null) {
             throw new NullPointerException("Can't find hedgehog image");
