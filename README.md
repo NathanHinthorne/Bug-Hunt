@@ -1,4 +1,4 @@
-# Butterfly Game
+# Bug Hunt
 
 This is a simple multiplayer game where players collect bug cards with various point values. 
 The player with the most points at the end of the game wins.
