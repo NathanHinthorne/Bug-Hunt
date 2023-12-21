@@ -4,5 +4,5 @@ module Butterfly {
     requires javafx.media;
 //    requires mina.core;
 
-    exports com.Butterfly.controller;
+    exports com.BugHunt.controller;
 }
